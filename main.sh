@@ -272,6 +272,11 @@ fi
 #   git clone "https://aur.archlinux.org/yay.git"
 #   cd ~/yay && makepkg -si --noconfirm
 
+# cd ~
+# touch "~/.cache/zshhistory"
+# git clone "https://github.com/ChrisTitusTech/zsh"
+# git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/powerlevel10k
+# ln -s "~/zsh/.zshrc" ~/.zshrc
 
 # mkdir -p "/boot/grub/themes/CyberRe"
 # cp -a CyberRe /boot/grub/themes/CyberRe
@@ -281,6 +286,14 @@ fi
 # echo "GRUB_THEME=\"/boot/grub/themes/CyberRe/theme.txt\"" >> /etc/default/grub
 # grub-mkconfig -o /boot/grub/grub.cfg
 
+
+####### aur-pkgs
+# ttf-meslo
+# nerd-fonts-fira-code
+# nordic-darker-standard-buttons-theme
+# nordic-darker-theme
+# nordic-kde-git
+# nordic-theme
 
 exit
 umount -R /mnt
