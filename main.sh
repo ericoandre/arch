@@ -1,6 +1,26 @@
 #!/usr/bin/env bash
+echo -ne "
+-------------------------------------------------------------------------
+   █████╗ ██████╗  ██████╗██╗  ██╗████████╗██╗████████╗██╗   ██╗███████╗
+  ██╔══██╗██╔══██╗██╔════╝██║  ██║╚══██╔══╝██║╚══██╔══╝██║   ██║██╔════╝
+  ███████║██████╔╝██║     ███████║   ██║   ██║   ██║   ██║   ██║███████╗
+  ██╔══██║██╔══██╗██║     ██╔══██║   ██║   ██║   ██║   ██║   ██║╚════██║
+  ██║  ██║██║  ██║╚██████╗██║  ██║   ██║   ██║   ██║   ╚██████╔╝███████║
+  ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝   ╚═╝   ╚═╝   ╚═╝    ╚═════╝ ╚══════╝
+-------------------------------------------------------------------------
+                    Automated Arch Linux Installer
+                        SCRIPTHOME: ArchTitus
+-------------------------------------------------------------------------
 
-######## Variaveis
+Final Setup and Configurations
+GRUB EFI Bootloader Install & Check
+"
+
+
+##################################################
+#                   Variaveis                    #
+##################################################
+
 LANGUAGE=pt_BR.UTF-8
 KEYBOARD_LAYOUT=br-abnt2
 
@@ -23,7 +43,11 @@ else
   ROOT_END=$(($ROOT_START+$ROOT_SIZE))
 fi
 
-######## functions
+
+##################################################
+#                   functions                    #
+##################################################
+
 arch_chroot(){
   arch-chroot /mnt /bin/bash -c "${1}"
 }
@@ -106,16 +130,22 @@ inst_boot_load(){
     arch_chroot "grub-mkconfig -o /boot/grub/grub.cfg"
 }
 
+
+##################################################
+#                   Script                       #
+##################################################
+
 echo -ne "
 -------------------------------------------------------------------------
                     Automated Arch Linux Installer
 -------------------------------------------------------------------------
 "
+
 pacman -Syy && pacman -S --noconfirm dialog pacman-contrib terminus-font reflector rsync grub
 
 timedatectl set-ntp true
 loadkeys br-abnt2
-# setfont ter-v22b
+setfont ter-v22b
 
 reflector -a 48 -c $iso -f 5 -l 20 --sort rate --save /etc/pacman.d/mirrorlist
 
@@ -126,8 +156,8 @@ echo -ne "
 "
 
 #### Particionamento
-# particionar_discos
-# monta_particoes
+particionar_discos
+monta_particoes
 
 #### Configuracao e Instalcao
 conf_repositorio
@@ -169,7 +199,7 @@ ROOT_PASSWD=$(dialog --clear --inputbox "Digite a senha de root" 10 25 --stdout)
 USER=$(dialog  --clear --inputbox "Digite o nome do novo Usuario" 10 25 --stdout)
 USER_PASSWD=$(dialog --clear --inputbox "Digite a senha  de $USER" 10 25 --stdout)
 
-#setting hostname
+#### setting hostname
 arch_chroot "echo $HNAME > /etc/hostname"
 arch_chroot "echo -e '127.0.0.1    localhost.localdomain    localhost\n::1        localhost.localdomain    localhost\n127.0.1.1    $HNAME.localdomain    $HNAME' >> /etc/hosts"
 
@@ -180,22 +210,22 @@ arch_chroot 'echo -e LANG="${LANGUAGE}\nLC_MESSAGES="${LANGUAGE}"> /etc/locale.c
 arch_chroot "locale-gen"
 arch_chroot "export LANG=${LANGUAGE}"
 
-# # Vconsole
+#### Vconsole
 arch_chroot "echo -e KEYMAP=$KEYBOARD_LAYOUT\nFONT=lat0-16\nFONT_MAP= > /etc/vconsole.conf"
 
-# # Setting timezone
+#### Setting timezone
 arch_chroot "ln -s /usr/share/zoneinfo/${ZONE}/${SUBZONE} /etc/localtime"
 
-# # Setting hw CLOCK
+#### Setting hw CLOCK
 arch_chroot "hwclock --systohc --$CLOCK"
 
-# # root password
+#### root password
 arch_chroot "echo -e $ROOT_PASSWD'\n'$ROOT_PASSWD | passwd"
 
-# #criar usuario
+#### criar usuario
 arch_chroot "useradd -m -g users -G adm,lp,wheel,power,audio,video -s /bin/bash $USER"
 
-# #Definir senha do usuário 
+#### Definir senha do usuário 
 arch_chroot "echo -e $USER_PASSWD'\n'$USER_PASSWD | passwd `echo $USER`"
 
 
