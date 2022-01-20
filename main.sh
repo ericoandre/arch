@@ -245,19 +245,10 @@ if [[ $? -eq 0 ]]; then
     arch_chroot "systemctl enable lightdm.service"
   fi
   arch_chroot "pacman -S --noconfirm make ntp vlc gparted papirus-icon-theme faenza-icon-theme jre8-openjdk jre8-openjdk-headless tilix eog xdg-user-dirs-gtk firefox xpdf mousepad"
-
-
-    cd ~
-    git clone "https://aur.archlinux.org/yay.git"
-    cd ~/yay
-    makepkg -si --noconfirm
-
-    cd ~
-    touch "~/.cache/zshhistory"
-    git clone "https://github.com/ChrisTitusTech/zsh"
-    git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/powerlevel10k
-    ln -s "~/zsh/.zshrc" ~/.zshrc
-
+  
+  cd ~
+  git clone "https://aur.archlinux.org/yay.git"
+  cd ~/yay && makepkg -si --noconfirm
 fi
 
 
@@ -273,14 +264,17 @@ fi
 #    sudo pacman -S --noconfirm --needed ${line}
 # done
 
-
-echo -e "Installing CyberRe Grub theme..."
+echo -ne "
+-------------------------------------------------------------------------
+                  Installing CyberRe Grub theme...
+-------------------------------------------------------------------------
+"
 THEME_NAME=CyberRe
 THEME_DIR="/boot/grub/themes"
 echo -e "Creating the theme directory..."
 mkdir -p "${THEME_DIR}/${THEME_NAME}"
 echo -e "Copying the theme..."
-cd ${HOME}/ericoandre
+cd ${HOME}/arch
 cp -a ${THEME_NAME}/* ${THEME_DIR}/${THEME_NAME}
 echo -e "Backing up Grub config..."
 cp -an /etc/default/grub /etc/default/grub.bak
