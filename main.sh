@@ -199,23 +199,19 @@ arch_chroot "echo -e $USER_PASSWD'\n'$USER_PASSWD | passwd `echo $USER`"
 
 dialog --title "INTEFACE GRAFICA" --clear --yesno "Deseja Instalar Windows Manager ?" 10 30
 if [[ $? -eq 0 ]]; then
-    echo -ne "
-    -------------------------------------------------------------------------
-                        Installing Graphics Drivers
-    -------------------------------------------------------------------------
-    "
-    gpu_type=$(lspci)
-    if grep -E "NVIDIA|GeForce" <<< ${gpu_type}; then
-        pacman -S nvidia --noconfirm --needed
-        nvidia-xconfig
-    elif lspci | grep 'VGA' | grep -E "Radeon|AMD"; then
-        pacman -S xf86-video-amdgpu --noconfirm --needed
-    elif grep -E "Integrated Graphics Controller" <<< ${gpu_type}; then
-        pacman -S libva-intel-driver libvdpau-va-gl lib32-vulkan-intel vulkan-intel libva-intel-driver libva-utils lib32-mesa --needed --noconfirm
-    elif grep -E "Intel Corporation UHD" <<< ${gpu_type}; then
-        pacman -S libva-intel-driver libvdpau-va-gl lib32-vulkan-intel vulkan-intel libva-intel-driver libva-utils lib32-mesa --needed --noconfirm
-    fi
-    arch_chroot "pacman -S --noconfirm xorg xorg-xinit xorg-server xorg-twm xorg-xclock xorg-xinit xorg-drivers xorg-xkill xorg-fonts-100dpi xorg-fonts-75dpi mesa xterm xf86-input-synaptics"
+
+gpu_type=$(lspci)
+  if grep -E "NVIDIA|GeForce" <<< ${gpu_type}; then
+    pacman -S nvidia --noconfirm --needed
+    nvidia-xconfig
+  elif lspci | grep 'VGA' | grep -E "Radeon|AMD"; then
+    pacman -S xf86-video-amdgpu --noconfirm --needed
+  elif grep -E "Integrated Graphics Controller" <<< ${gpu_type}; then
+    pacman -S libva-intel-driver libvdpau-va-gl lib32-vulkan-intel vulkan-intel libva-intel-driver libva-utils lib32-mesa --needed --noconfirm
+  elif grep -E "Intel Corporation UHD" <<< ${gpu_type}; then
+    pacman -S libva-intel-driver libvdpau-va-gl lib32-vulkan-intel vulkan-intel libva-intel-driver libva-utils lib32-mesa --needed --noconfirm
+fi
+arch_chroot "pacman -S --noconfirm xorg xorg-xinit xorg-server xorg-twm xorg-xclock xorg-xinit xorg-drivers xorg-xkill xorg-fonts-100dpi xorg-fonts-75dpi mesa xterm xf86-input-synaptics"
   
 
 
@@ -246,9 +242,9 @@ if [[ $? -eq 0 ]]; then
   fi
   arch_chroot "pacman -S --noconfirm make ntp vlc gparted papirus-icon-theme faenza-icon-theme jre8-openjdk jre8-openjdk-headless tilix eog xdg-user-dirs-gtk firefox xpdf mousepad"
   
-  cd ~
-  git clone "https://aur.archlinux.org/yay.git"
-  cd ~/yay && makepkg -si --noconfirm
+#   cd ~
+#   git clone "https://aur.archlinux.org/yay.git"
+#   cd ~/yay && makepkg -si --noconfirm
 fi
 
 
