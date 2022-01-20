@@ -13,7 +13,7 @@ SWAP_SIZE=1024
 BOOT_SIZE=512
 ROOT_SIZE=0
 
-EXTRA_PKGS="ttf-liberation ttf-dejavu ttf-hack ttf-roboto wget cmatrix openbsd-netcat gcc traceroute git ntfs-3g os-prober grub virtualbox-guest-utils acpi acpid dbus unrar tar rsync ufw exfat-utils networkmanager iw net-tools dhclient dhcpcd neofetch nano alsa-plugins alsa-utils alsa-firmware pulseaudio pulseaudio-alsa pavucontrol volumeicon bash-completion zsh zsh-syntax-highlighting zsh-autosuggestions"
+EXTRA_PKGS="ttf-liberation ttf-dejavu ttf-hack ttf-roboto go wget cmatrix openbsd-netcat gcc traceroute git ntfs-3g os-prober grub virtualbox-guest-utils acpi acpid dbus unrar p7zip tar rsync ufw exfat-utils networkmanager iw net-tools dhclient dhcpcd neofetch nano alsa-plugins alsa-utils alsa-firmware pulseaudio pulseaudio-alsa pavucontrol volumeicon bash-completion zsh zsh-syntax-highlighting zsh-autosuggestions"
 
 ######## Variáveis auxiliares. NÃO DEVEM SER ALTERADAS
 BOOT_START=1
@@ -278,6 +278,8 @@ fi
 # git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/powerlevel10k
 # ln -s "~/zsh/.zshrc" ~/.zshrc
 
+# git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/themes/powerlevel10k
+
 # mkdir -p "/boot/grub/themes/CyberRe"
 # cp -a CyberRe /boot/grub/themes/CyberRe
 # cp -an /etc/default/grub /etc/default/grub.bak
@@ -286,6 +288,9 @@ fi
 # echo "GRUB_THEME=\"/boot/grub/themes/CyberRe/theme.txt\"" >> /etc/default/grub
 # grub-mkconfig -o /boot/grub/grub.cfg
 
+# chsh -s /bin/zsh
+# yay -S oh-my-zsh-git
+# cp /usr/share/oh-my-zsh/zshrc ~/.zshrc
 
 ####### aur-pkgs
 # ttf-meslo
@@ -294,6 +299,8 @@ fi
 # nordic-darker-theme
 # nordic-kde-git
 # nordic-theme
+
+# ttf-meslo-nerd-font-powerlevel10k
 
 exit
 umount -R /mnt
