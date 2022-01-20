@@ -1,21 +1,4 @@
 #!/usr/bin/env bash
-echo -ne "
--------------------------------------------------------------------------
-   █████╗ ██████╗  ██████╗██╗  ██╗████████╗██╗████████╗██╗   ██╗███████╗
-  ██╔══██╗██╔══██╗██╔════╝██║  ██║╚══██╔══╝██║╚══██╔══╝██║   ██║██╔════╝
-  ███████║██████╔╝██║     ███████║   ██║   ██║   ██║   ██║   ██║███████╗
-  ██╔══██║██╔══██╗██║     ██╔══██║   ██║   ██║   ██║   ██║   ██║╚════██║
-  ██║  ██║██║  ██║╚██████╗██║  ██║   ██║   ██║   ██║   ╚██████╔╝███████║
-  ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝   ╚═╝   ╚═╝   ╚═╝    ╚═════╝ ╚══════╝
--------------------------------------------------------------------------
-                    Automated Arch Linux Installer
-                        SCRIPTHOME: ArchTitus
--------------------------------------------------------------------------
-
-Final Setup and Configurations
-GRUB EFI Bootloader Install & Check
-"
-
 
 ##################################################
 #                   Variaveis                    #
@@ -205,16 +188,15 @@ arch_chroot "echo -e '127.0.0.1    localhost.localdomain    localhost\n::1      
 
 #setting locale pt_BR.UTF-8 UTF-8
 sed 's/^#'$LANGUAGE'/'$LANGUAGE/ /mnt/etc/locale.gen > /tmp/locale && mv /tmp/locale /mnt/etc/locale.gen
-
-arch_chroot 'echo -e LANG="${LANGUAGE}\nLC_MESSAGES="${LANGUAGE}"> /etc/locale.conf'
+arch_chroot "echo -e LANG=$LANGUAGE'\n'LC_MESSAGES=$LANGUAGE> /etc/locale.conf"
 arch_chroot "locale-gen"
-arch_chroot "export LANG=${LANGUAGE}"
+arch_chroot "export LANG=$LANGUAGE"
 
 #### Vconsole
-arch_chroot "echo -e KEYMAP=$KEYBOARD_LAYOUT\nFONT=lat0-16\nFONT_MAP= > /etc/vconsole.conf"
+arch_chroot "echo -e KEYMAP=$KEYBOARD_LAYOUT'\n'FONT=lat0-16'\n'FONT_MAP= > /etc/vconsole.conf"
 
 #### Setting timezone
-arch_chroot "ln -s /usr/share/zoneinfo/${ZONE}/${SUBZONE} /etc/localtime"
+arch_chroot "ln -s /usr/share/zoneinfo/$ZONE/$SUBZONE /etc/localtime"
 
 #### Setting hw CLOCK
 arch_chroot "hwclock --systohc --$CLOCK"
@@ -228,6 +210,7 @@ arch_chroot "useradd -m -g users -G adm,lp,wheel,power,audio,video -s /bin/bash 
 #### Definir senha do usuário 
 arch_chroot "echo -e $USER_PASSWD'\n'$USER_PASSWD | passwd `echo $USER`"
 
+arch_chroot "echo %wheel ALL=(ALL) ALL >> /etc/sudoers"
 
 dialog --title "INTEFACE GRAFICA" --clear --yesno "Deseja Instalar Windows Manager ?" 10 30
 if [[ $? -eq 0 ]]; then
@@ -270,10 +253,6 @@ if [[ $? -eq 0 ]]; then
     arch_chroot "systemctl enable lightdm.service"
   fi
   arch_chroot "pacman -S --noconfirm make ntp vlc gparted papirus-icon-theme faenza-icon-theme jre8-openjdk jre8-openjdk-headless tilix eog xdg-user-dirs-gtk firefox xpdf mousepad"
-  
-#   cd ~
-#   git clone "https://aur.archlinux.org/yay.git"
-#   cd ~/yay && makepkg -si --noconfirm
 fi
 
 
@@ -289,29 +268,21 @@ fi
 #    sudo pacman -S --noconfirm --needed ${line}
 # done
 
-echo -ne "
--------------------------------------------------------------------------
-                  Installing CyberRe Grub theme...
--------------------------------------------------------------------------
-"
-THEME_NAME=CyberRe
-THEME_DIR="/boot/grub/themes"
-echo -e "Creating the theme directory..."
-mkdir -p "${THEME_DIR}/${THEME_NAME}"
-echo -e "Copying the theme..."
-cd ${HOME}/arch
-cp -a ${THEME_NAME}/* ${THEME_DIR}/${THEME_NAME}
-echo -e "Backing up Grub config..."
-cp -an /etc/default/grub /etc/default/grub.bak
-echo -e "Setting the theme as the default..."
-grep "GRUB_THEME=" /etc/default/grub 2>&1 >/dev/null && sed -i '/GRUB_THEME=/d' /etc/default/grub
-echo "GRUB_THEME=\"${THEME_DIR}/${THEME_NAME}/theme.txt\"" >> /etc/default/grub
-echo -e "Updating grub..."
-grub-mkconfig -o /boot/grub/grub.cfg
-echo -e "All set!"
+
+#   cd ~
+#   git clone "https://aur.archlinux.org/yay.git"
+#   cd ~/yay && makepkg -si --noconfirm
 
 
+# mkdir -p "/boot/grub/themes/CyberRe"
+# cp -a CyberRe /boot/grub/themes/CyberRe
+# cp -an /etc/default/grub /etc/default/grub.bak
 
-# exit
-# umount -R /mnt
-# poweroff
+# grep "GRUB_THEME=" /etc/default/grub 2>&1 >/dev/null && sed -i '/GRUB_THEME=/d' /etc/default/grub
+# echo "GRUB_THEME=\"/boot/grub/themes/CyberRe/theme.txt\"" >> /etc/default/grub
+# grub-mkconfig -o /boot/grub/grub.cfg
+
+
+exit
+umount -R /mnt
+poweroff
