@@ -13,7 +13,7 @@ SWAP_SIZE=1024
 BOOT_SIZE=512
 ROOT_SIZE=0
 
-EXTRA_PKGS="ttf-liberation ttf-dejavu ttf-hack ttf-roboto go wget cmatrix openbsd-netcat gcc traceroute git ntfs-3g os-prober grub virtualbox-guest-utils acpi acpid dbus unrar p7zip tar rsync ufw exfat-utils networkmanager iw net-tools dhclient dhcpcd neofetch nano alsa-plugins alsa-utils alsa-firmware pulseaudio pulseaudio-alsa pavucontrol volumeicon bash-completion zsh zsh-syntax-highlighting zsh-autosuggestions"
+EXTRA_PKGS="go wget cmatrix gcc  make jre8-openjdk jre8-openjdk-headless openbsd-netcat traceroute git ntfs-3g os-prober grub virtualbox-guest-utils acpi acpid dbus unrar p7zip tar rsync ufw exfat-utils networkmanager iw net-tools dhclient dhcpcd neofetch nano alsa-plugins alsa-utils alsa-firmware pulseaudio pulseaudio-alsa pavucontrol volumeicon bash-completion zsh zsh-syntax-highlighting zsh-autosuggestions"
 
 ######## Variáveis auxiliares. NÃO DEVEM SER ALTERADAS
 BOOT_START=1
@@ -84,7 +84,7 @@ conf_repositorio(){
 
 inst_base(){
   # pacstrap /mnt base bash nano vim-minimal vi linux-firmware cryptsetup e2fsprogs findutils gawk inetutils iproute2 jfsutils licenses linux-firmware logrotate lvm2 man-db man-pages mdadm pciutils procps-ng reiserfsprogs sysfsutils xfsprogs usbutils `echo $kernel`
-  pacstrap /mnt base base-devel linux linux-headers linux-firmware  `echo $EXTRA_PKGS`
+  pacstrap /mnt base base-devel linux linux-headers linux-firmware ttf-liberation ttf-dejavu ttf-hack ttf-roboto `echo $EXTRA_PKGS`
   cp /etc/pacman.d/mirrorlist /mnt/etc/pacman.d/mirrorlist
   genfstab -U -p /mnt >> /mnt/etc/fstab
   echo "/opt/swap/swapfile             none    swap    sw        0       0" >> /mnt/etc/fstab
@@ -111,8 +111,6 @@ inst_boot_load(){
     cp /mnt/usr/share/locale/en@quot/LC_MESSAGES/grub.mo /mnt/boot/grub/locale/en.mo
     arch_chroot "grub-mkconfig -o /boot/grub/grub.cfg"
 }
-
-
 ##################################################
 #                   Script                       #
 ##################################################
@@ -123,13 +121,11 @@ echo -ne "
 -------------------------------------------------------------------------
 "
 
-pacman -Syy && pacman -S --noconfirm dialog pacman-contrib terminus-font reflector rsync grub
+pacman -Syy && pacman -S --noconfirm dialog terminus-font reflector
 
 timedatectl set-ntp true
 loadkeys br-abnt2
 setfont ter-v22b
-
-reflector -a 48 -c $iso -f 5 -l 20 --sort rate --save /etc/pacman.d/mirrorlist
 
 echo -ne "
 -------------------------------------------------------------------------
@@ -166,7 +162,6 @@ echo -ne "
 "
 arch_chroot "loadkeys br-abnt2"
 arch_chroot "timedatectl set-ntp true"
-
 
 HNAME=$(dialog  --clear --inputbox "Digite o nome do Computador" 10 25 --stdout)
 
@@ -211,25 +206,30 @@ arch_chroot "echo -e $USER_PASSWD'\n'$USER_PASSWD | passwd `echo $USER`"
 
 arch_chroot "echo %wheel ALL=(ALL) ALL >> /etc/sudoers"
 
+#### Driver
+gpu_type=$(lspci)
+if grep -E "NVIDIA|GeForce" <<< ${gpu_type}; then
+  arch_chroot "pacman -S nvidia --noconfirm --needed"
+  arch_chroot "nvidia-xconfig"
+elif lspci | grep 'VGA' | grep -E "Radeon|AMD"; then
+  arch_chroot "pacman -S xf86-video-amdgpu --noconfirm --needed"
+elif grep -E "Integrated Graphics Controller" <<< ${gpu_type}; then
+  arch_chroot "pacman -S libva-intel-driver libvdpau-va-gl lib32-vulkan-intel vulkan-intel libva-intel-driver libva-utils lib32-mesa --needed --noconfirm"
+elif grep -E "Intel Corporation UHD" <<< ${gpu_type}; then
+  arch_chroot "pacman -S libva-intel-driver libvdpau-va-gl lib32-vulkan-intel vulkan-intel libva-intel-driver libva-utils lib32-mesa --needed --noconfirm"
+fi
+
+arch_chroot "pacman -S --noconfirm xf86-input-synaptics"
+
+
 dialog --title "INTEFACE GRAFICA" --clear --yesno "Deseja Instalar Windows Manager ?" 10 30
 if [[ $? -eq 0 ]]; then
-  gpu_type=$(lspci)
-  if grep -E "NVIDIA|GeForce" <<< ${gpu_type}; then
-    pacman -S nvidia --noconfirm --needed
-    nvidia-xconfig
-  elif lspci | grep 'VGA' | grep -E "Radeon|AMD"; then
-    pacman -S xf86-video-amdgpu --noconfirm --needed
-  elif grep -E "Integrated Graphics Controller" <<< ${gpu_type}; then
-    pacman -S libva-intel-driver libvdpau-va-gl lib32-vulkan-intel vulkan-intel libva-intel-driver libva-utils lib32-mesa --needed --noconfirm
-  elif grep -E "Intel Corporation UHD" <<< ${gpu_type}; then
-    pacman -S libva-intel-driver libvdpau-va-gl lib32-vulkan-intel vulkan-intel libva-intel-driver libva-utils lib32-mesa --needed --noconfirm
-  fi
-  arch_chroot "pacman -S --noconfirm xorg xorg-xinit xorg-server xorg-twm xorg-xclock xorg-xinit xorg-drivers xorg-xkill xorg-fonts-100dpi xorg-fonts-75dpi mesa xterm xf86-input-synaptics"
+  arch_chroot "pacman -S --noconfirm xorg xorg-xinit xorg-server xorg-twm xorg-xclock xorg-xinit xorg-drivers xorg-xkill xorg-fonts-100dpi xorg-fonts-75dpi mesa xterm"
   
-  DM=$(dialog  --clear --menu "Selecione o Kernel" 15 30 4  1 "gnome" 2 "cinnamon" 3 "plasma" 4 "mate" 5 "Xfce" 6 "deepin" 7 "i3" --stdout)
+  DM=$(dialog  --clear --menu "Selecione Gerenociador grafico" 15 30 4  1 "gnome" 2 "cinnamon" 3 "plasma" 4 "mate" 5 "Xfce" 6 "deepin" 7 "i3" --stdout)
   if [[ $DM -eq 1 ]]; then
     #arch_chroot "pacman -S --noconfirm gnome gnome-tweaks file-roller gdm"
-    arch_chroot "pacman -S --noconfirm gdm gnome-shell gnome-backgrounds gnome-control-center gnome-screenshot gnome-system-monitor gnome-terminal gnome-tweak-tool nautilus gedit gnome-calculator gnome-disk-utility eog evince"
+    arch_chroot "pacman -S --noconfirm gdm gnome-shell gnome-backgrounds gnome-control-center gnome-screenshot gnome-system-monitor gnome-terminal gnome-tweak-tool nautilus gedit gnome-calculator gnome-disk-utility"
     arch_chroot "systemctl enable gdm.service"
   elif [[ $DM -eq 2 ]]; then
     arch_chroot "pacman -S --noconfirm cinnamon sakura gnome-disk-utility nemo-fileroller gdm"
@@ -245,14 +245,16 @@ if [[ $? -eq 0 ]]; then
     arch_chroot "pacman -S --noconfirm xfce4 xfce4-goodies file-roller network-manager-applet lightdm lightdm-gtk-greeter lightdm-gtk-greeter-settings"
     arch_chroot "systemctl enable lightdm.service"
   elif [[ $DM -eq 6 ]]; then
-    arch_chroot "pacman -S --noconfirm deepin deepin-extra ark gnome-disk-utility lightdm lightdm-gtk-greeter lightdm-gtk-greeter-settings"
-    arch_chroot "systemctl enable lightdm.service"
+    arch_chroot "pacman -S --noconfirm deepin deepin-extra ark gnome-disk-utility sddm"
+    arch_chroot "echo -e '[Theme]\nCurrent=breeze' >> /usr/lib/sddm/sddm.conf.d/default.conf"
+    arch_chroot "systemctl enable sddm.service"
   elif [[ $DM -eq 7 ]]; then
     arch_chroot "pacmanpacman -S --noconfirm --needed --asdeps lightdm lightdm-gtk-greeter i3 feh gnome-disk-utility lightdm-gtk-greeter-settings"
     arch_chroot "systemctl enable lightdm.service"
   fi
-  arch_chroot "pacman -S --noconfirm make ntp vlc gparted papirus-icon-theme faenza-icon-theme jre8-openjdk jre8-openjdk-headless tilix eog xdg-user-dirs-gtk firefox xpdf mousepad"
+  arch_chroot "pacman -S --noconfirm ntp vlc gparted papirus-icon-theme faenza-icon-theme tilix eog xdg-user-dirs-gtk firefox evince mousepad"
 fi
+
 
 
 
@@ -269,8 +271,23 @@ fi
 
 
 #   cd ~
-#   git clone "https://aur.archlinux.org/yay.git"
+#   git clone https://aur.archlinux.org/yay.git /mnt/home/$USER/yay
 #   cd ~/yay && makepkg -si --noconfirm
+
+####### aur-pkgs
+# ttf-meslo
+# nerd-fonts-fira-code
+# nordic-darker-standard-buttons-theme
+# nordic-darker-theme
+# nordic-kde-git
+# nordic-theme
+
+# ttf-meslo-nerd-font-powerlevel10k
+
+# chsh -s /bin/zsh
+# yay -S oh-my-zsh-git
+# cp /usr/share/oh-my-zsh/zshrc ~/.zshrc
+
 
 # cd ~
 # touch "~/.cache/zshhistory"
@@ -287,20 +304,6 @@ fi
 # grep "GRUB_THEME=" /etc/default/grub 2>&1 >/dev/null && sed -i '/GRUB_THEME=/d' /etc/default/grub
 # echo "GRUB_THEME=\"/boot/grub/themes/CyberRe/theme.txt\"" >> /etc/default/grub
 # grub-mkconfig -o /boot/grub/grub.cfg
-
-# chsh -s /bin/zsh
-# yay -S oh-my-zsh-git
-# cp /usr/share/oh-my-zsh/zshrc ~/.zshrc
-
-####### aur-pkgs
-# ttf-meslo
-# nerd-fonts-fira-code
-# nordic-darker-standard-buttons-theme
-# nordic-darker-theme
-# nordic-kde-git
-# nordic-theme
-
-# ttf-meslo-nerd-font-powerlevel10k
 
 exit
 umount -R /mnt
