@@ -13,7 +13,6 @@ SWAP_SIZE=1024
 BOOT_SIZE=512
 ROOT_SIZE=0
 
-
 EXTRA_PKGS="sudo go screenfetch wget cmatrix gcc htop make jre8-openjdk jre8-openjdk-headless openbsd-netcat traceroute git ntfs-3g os-prober virtualbox-guest-utils pciutils acpi acpid dbus unrar p7zip tar rsync ufw exfat-utils networkmanager iw net-tools dhclient dhcpcd neofetch nano alsa-plugins alsa-utils alsa-firmware pulseaudio pulseaudio-alsa pavucontrol volumeicon bash-completion zsh zsh-syntax-highlighting zsh-autosuggestions"
 
 ######## Variáveis auxiliares. NÃO DEVEM SER ALTERADAS
@@ -122,7 +121,7 @@ timedatectl set-ntp true
 loadkeys br-abnt2
 setfont ter-v22b
 
-#### Particionamento
+#### Particionamento esta configurado para usar todo o hd
 particionar_discos
 monta_particoes
 
