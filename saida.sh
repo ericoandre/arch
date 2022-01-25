@@ -200,7 +200,7 @@ if [[ $? -eq 0 ]]; then
   desktop=$(dialog --clear --menu "Desktop Environment" 15 30 4  1 "Gnome Minimal" 2 "Gnome" 3 "Plasma kde" 4 "cinnamon" 5 "xfce4" 6 "deepin" 7 "Minimal"  --stdout)
   case $desktop in
       1)
-          DEpkg="gdm gnome-shell gnome-alsamixer gnome-backgrounds gnome-control-center gnome-screenshot gnome-system-monitor gnome-terminal gnome-tweak-tool nautilus gedit gvfs gnome-calculator gnome-disk-utility"
+          DEpkg="gdm gnome-shell gnome-backgrounds gnome-control-center gnome-screenshot gnome-system-monitor gnome-terminal gnome-tweak-tool nautilus gedit gvfs gnome-calculator gnome-disk-utility"
           ;;
       2)
           DEpkg="gdm gnome gnome-tweak-tool"
@@ -222,15 +222,25 @@ if [[ $? -eq 0 ]]; then
   pacman -Sy $DEpkg mesa eog xdg-user-dirs-gtk firefox evince adwaita-icon-theme papirus-icon-theme faenza-icon-theme gparted --noconfirm --needed
 
   case $desktop in
-      1 || 2 || 4)
+      1)
           arch_chroot "systemctl enable gdm.service"
           ;;
-      3 || 6)
+      2)
+          arch_chroot "systemctl enable gdm.service"
+          ;;
+      3)
           arch_chroot "echo -e '[Theme]\nCurrent=breeze' >> /usr/lib/sddm/sddm.conf.d/default.conf"
           arch-chroot "systemctl enable sddm.service"
+          ;; 
+      4)
+          arch_chroot "systemctl enable gdm.service"
           ;;
       5)
           arch-chroot "systemctl enable lxdm.service"
+          ;;
+      6)
+          arch_chroot "echo -e '[Theme]\nCurrent=breeze' >> /usr/lib/sddm/sddm.conf.d/default.conf"
+          arch-chroot "systemctl enable sddm.service"
           ;;
   esac
 
