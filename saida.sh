@@ -219,7 +219,7 @@ if [[ $? -eq 0 ]]; then
           ;;
   esac
 
-  pacman -Sy $DEpkg mesa eog xdg-user-dirs-gtk firefox evince adwaita-icon-theme papirus-icon-theme faenza-icon-theme gparted --noconfirm --needed
+  arch_chroot "pacman -Sy $DEpkg mesa eog xdg-user-dirs-gtk firefox evince adwaita-icon-theme papirus-icon-theme faenza-icon-theme gparted --noconfirm --needed"
 
   case $desktop in
       1)
