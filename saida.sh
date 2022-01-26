@@ -75,7 +75,6 @@ monta_particoes(){
 
 conf_repositorio(){
   reflector --verbose --protocol http --protocol https --latest 20 --sort rate --save /etc/pacman.d/mirrorlist
-  sed -i 's/^#Color/Color\nILoveCandy' /etc/pacman.conf
   if [ "$(uname -m)" = "x86_64" ]; then
     sed -i '/multilib\]/,+1 s/^#//' /etc/pacman.conf
   fi
@@ -85,11 +84,14 @@ conf_repositorio(){
 inst_base(){
   # pacstrap /mnt base bash nano vim-minimal vi linux-firmware cryptsetup e2fsprogs findutils gawk inetutils iproute2 jfsutils licenses linux-firmware logrotate lvm2 man-db man-pages mdadm pciutils procps-ng reiserfsprogs sysfsutils xfsprogs usbutils `echo $kernel`
   pacstrap /mnt base base-devel linux linux-headers linux-firmware ttf-liberation ttf-dejavu ttf-hack ttf-roboto grub `echo $EXTRA_PKGS`
-  cp /etc/pacman.d/mirrorlist /mnt/etc/pacman.d/mirrorlist
   genfstab -U -p /mnt >> /mnt/etc/fstab
   echo "/opt/swap/swapfile             none    swap    sw        0       0" >> /mnt/etc/fstab
   arch_chroot "systemctl enable NetworkManager acpid && mkinitcpio -p linux"
-
+  
+  cp /etc/pacman.d/mirrorlist /mnt/etc/pacman.d/mirrorlist
+  if [ "$(uname -m)" = "x86_64" ]; then
+    sed -i '/multilib\]/,+1 s/^#//' /etc/pacman.conf
+  fi
 }
 
 inst_boot_load(){
@@ -219,7 +221,7 @@ if [[ $? -eq 0 ]]; then
           ;;
   esac
 
-  arch_chroot "pacman -Sy $DEpkg mesa eog xdg-user-dirs-gtk firefox evince adwaita-icon-theme papirus-icon-theme faenza-icon-theme gparted --noconfirm --needed"
+  arch_chroot "pacman -Sy $DEpkg tilix mesa eog xdg-user-dirs-gtk firefox evince adwaita-icon-theme papirus-icon-theme faenza-icon-theme gparted --noconfirm --needed"
 
   case $desktop in
       1)
@@ -243,7 +245,6 @@ if [[ $? -eq 0 ]]; then
           arch-chroot "systemctl enable sddm.service"
           ;;
   esac
-
 fi
 
 exit
