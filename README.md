@@ -36,14 +36,12 @@ cd .. && rm -rf /tmp/yay
 ### powerlevel10k
 
 ```bash
-
 yay -S --noconfirm --needed nerd-fonts-fira-code nordic-darker-standard-buttons-theme nordic-darker-theme nordic-theme
-
-yay -S --noconfirm --needed gnome-shell-extension-dash-to-dock
+yay -S --noconfirm --needed gnome-shell-extension-dash-to-dock 
 
 cd ~
 touch "~/.cache/zshhistory"
 mv arch/zsh ~/.zsh
-mv arch/powerlevel10k ~/.powerlevel10k
-ln -s "~/zsh/.zshrc" ~/.zshrc
+git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/powerlevel10k
+ln -s "~/zsh/zshrc" ~/.zshrc
 ```
