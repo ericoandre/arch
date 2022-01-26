@@ -15,13 +15,13 @@ echo -e '[Desktop Entry]\nVersion=1.0\nName=vscode\nExec=code\nIcon=/opt/VSCode-
 ### Grub Theme
 
 ```bash
-# mkdir -p "/boot/grub/themes/CyberRe"
-# cp -a arch/CyberRe /boot/grub/themes/CyberRe
-# cp -an /etc/default/grub /etc/default/grub.bak
+mkdir -p "/boot/grub/themes/CyberRe"
+cp -a arch/CyberRe /boot/grub/themes/CyberRe
+cp -an /etc/default/grub /etc/default/grub.bak
 
-# grep "GRUB_THEME=" /etc/default/grub 2>&1 >/dev/null && sed -i '/GRUB_THEME=/d' /etc/default/grub
-# echo "GRUB_THEME=\"/boot/grub/themes/CyberRe/theme.txt\"" >> /etc/default/grub
-# grub-mkconfig -o /boot/grub/grub.cfg
+grep "GRUB_THEME=" /etc/default/grub 2>&1 >/dev/null && sed -i '/GRUB_THEME=/d' /etc/default/grub
+echo "GRUB_THEME=\"/boot/grub/themes/CyberRe/theme.txt\"" >> /etc/default/grub
+grub-mkconfig -o /boot/grub/grub.cfg
 ```
 
 ### Yay
