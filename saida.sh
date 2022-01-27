@@ -240,16 +240,26 @@ if [[ $? -eq 0 ]]; then
   arch_chroot "pacman -Sy $DEpkg tilix mesa eog xdg-user-dirs-gtk gparted firefox evince adwaita-icon-theme papirus-icon-theme faenza-icon-theme --noconfirm --needed"
 
   case $desktop in
-      1 | 2 | 4)
+      1)
           arch_chroot "systemctl enable gdm.service"
           ;;
-      3 | 6)
+      2)
+          arch_chroot "systemctl enable gdm.service"
+          ;;
+      3)
           arch_chroot "echo -e '[Theme]\nCurrent=breeze' >> /usr/lib/sddm/sddm.conf.d/default.conf"
           arch-chroot "systemctl enable sddm.service"
           ;; 
+      4)
+          arch_chroot "systemctl enable gdm.service"
+          ;;
       5)
           arch-chroot "systemctl enable lxdm.service"
           ;;
+      6)
+          arch_chroot "echo -e '[Theme]\nCurrent=breeze' >> /usr/lib/sddm/sddm.conf.d/default.conf"
+          arch-chroot "systemctl enable sddm.service"
+          ;; 
   esac
 fi
 
