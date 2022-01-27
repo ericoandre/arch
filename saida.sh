@@ -237,7 +237,7 @@ if [[ $? -eq 0 ]]; then
           ;;
   esac
 
-  arch_chroot "pacman -Sy $DEpkg visual-studio-code-bin tilix mesa eog xdg-user-dirs-gtk gparted firefox evince adwaita-icon-theme papirus-icon-theme faenza-icon-theme --noconfirm --needed"
+  arch_chroot "pacman -Sy $DEpkg tilix mesa eog xdg-user-dirs-gtk gparted firefox evince adwaita-icon-theme papirus-icon-theme faenza-icon-theme --noconfirm --needed"
 
   case $desktop in
       1 | 2 | 4)
