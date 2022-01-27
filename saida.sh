@@ -13,7 +13,6 @@ SWAP_SIZE=1024
 BOOT_SIZE=512
 ROOT_SIZE=0
 
-# virtualbox-guest-utils  
 EXTRA_PKGS="sudo go ibus dbus dbus-glib dbus-python python python-pip screenfetch wget cmatrix gcc htop make jre8-openjdk jre8-openjdk-headless git ntfs-3g os-prober pciutils acpi acpid unrar p7zip tar rsync ufw iptables openbsd-netcat traceroute exfat-utils networkmanager iw net-tools dhclient dhcpcd neofetch nano alsa-plugins alsa-utils alsa-firmware pulseaudio pulseaudio-alsa pavucontrol volumeicon bash-completion zsh zsh-syntax-highlighting zsh-autosuggestions"
 
 ######## Variáveis auxiliares. NÃO DEVEM SER ALTERADAS
@@ -209,7 +208,7 @@ case $(systemd-detect-virt) in
       arch_chroot "systemctl enable vmware-vmblock-fuse.service"
   ;;
   oracle)
-      arch_chroot "pacman -S virtualbox-guest-utils e xf86-video-vmware --noconfirm --needed"
+      arch_chroot "pacman -S virtualbox-guest-utils xf86-video-vmware --noconfirm --needed"
       arch_chroot "systemctl enable vboxservice.service"
   ;;
 esac
