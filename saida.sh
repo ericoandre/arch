@@ -36,6 +36,11 @@ arch_chroot(){
 Parted() {
   parted --script $HD "${1}"
 }
+
+progress_bar() {
+  dialog --clear --title " $1 " --gauge "\n $2" 8 70
+}
+
 particionar_discos(){
   if [[ -d "/sys/firmware/efi/" ]]; then
     # Configura o tipo da tabela de partições
@@ -133,7 +138,6 @@ monta_particoes
 
 #### Instalcao
 conf_repositorio
-
 inst_base
 inst_boot_load
 
@@ -192,7 +196,6 @@ arch_chroot "sed -i 's/# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/' /etc/sudoer
 arch_chroot "systemctl enable NetworkManager.service"
 arch_chroot "systemctl enable acpid.service"
 
-
 #### Driver
 gpu_type=$(lspci)
 if grep -E "NVIDIA|GeForce" <<< ${gpu_type}; then
@@ -234,7 +237,7 @@ if [[ $? -eq 0 ]]; then
           ;;
   esac
 
-  arch_chroot "pacman -Sy $DEpkg tilix mesa eog xdg-user-dirs-gtk firefox evince adwaita-icon-theme papirus-icon-theme faenza-icon-theme gparted --noconfirm --needed"
+  arch_chroot "pacman -Sy $DEpkg visual-studio-code-bin tilix mesa eog xdg-user-dirs-gtk gparted firefox evince adwaita-icon-theme papirus-icon-theme faenza-icon-theme --noconfirm --needed"
 
   case $desktop in
       1 | 2 | 4)
