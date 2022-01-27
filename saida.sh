@@ -82,11 +82,13 @@ conf_repositorio(){
 }
 
 inst_base(){
+  #### Install base system
   # pacstrap /mnt base bash nano vim-minimal vi linux-firmware cryptsetup e2fsprogs findutils gawk inetutils iproute2 jfsutils licenses linux-firmware logrotate lvm2 man-db man-pages mdadm pciutils procps-ng reiserfsprogs sysfsutils xfsprogs usbutils `echo $kernel`
   pacstrap /mnt base base-devel linux linux-headers linux-firmware ttf-liberation ttf-dejavu ttf-hack ttf-roboto grub `echo $EXTRA_PKGS`
+  
+  #### fstab
   genfstab -U -p /mnt >> /mnt/etc/fstab
   echo "/opt/swap/swapfile             none    swap    sw        0       0" >> /mnt/etc/fstab
-  arch_chroot "systemctl enable NetworkManager acpid && mkinitcpio -p linux"
   
   cp /etc/pacman.d/mirrorlist /mnt/etc/pacman.d/mirrorlist
   if [ "$(uname -m)" = "x86_64" ]; then
@@ -101,6 +103,8 @@ inst_boot_load(){
     elif [ "$proc" = "AuthenticAMD" ]; then
         pacstrap /mnt amd-ucode
     fi
+    
+    arch_chroot "mkinitcpio -p linux"
 
     if [[ -d "/sys/firmware/efi/" ]]; then
         arch_chroot "pacman -S --noconfirm efibootmgr dosfstools mtools"
@@ -150,14 +154,16 @@ ROOT_PASSWD=$(dialog --clear --inputbox "Digite a senha de root" 10 25 --stdout)
 USER=$(dialog  --clear --inputbox "Digite o nome do novo Usuario" 10 25 --stdout)
 USER_PASSWD=$(dialog --clear --inputbox "Digite a senha  de $USER" 10 25 --stdout)
 
+
+#### configure base system
 #### setting hostname
 arch_chroot "echo $HNAME > /etc/hostname"
 arch_chroot "echo -e '127.0.0.1    localhost.localdomain    localhost'\n'::1        localhost.localdomain    localhost'\n'127.0.1.1    $HNAME.localdomain    $HNAME' >> /etc/hosts"
 
-#setting locale pt_BR.UTF-8 UTF-8
+#### locales setting locale pt_BR.UTF-8 UTF-8
 sed 's/^#'$LANGUAGE'/'$LANGUAGE/ /mnt/etc/locale.gen > /tmp/locale && mv /tmp/locale /mnt/etc/locale.gen
-arch_chroot "echo -e LANG=$LANGUAGE'\n'LC_MESSAGES=$LANGUAGE> /etc/locale.conf"
 arch_chroot "locale-gen"
+arch_chroot "echo -e LANG=$LANGUAGE'\n'LC_MESSAGES=$LANGUAGE> /etc/locale.conf"
 arch_chroot "export LANG=$LANGUAGE"
 
 #### Vconsole
@@ -165,6 +171,9 @@ arch_chroot "echo -e KEYMAP=$KEYBOARD_LAYOUT'\n'FONT=lat0-16'\n'FONT_MAP= > /etc
 
 #### Setting timezone
 arch_chroot "ln -s /usr/share/zoneinfo/$ZONE/$SUBZONE /etc/localtime"
+
+#### enable multilib
+arch_chroot "sed -i '/multilib\]/,+1 s/^#//' /etc/pacman.conf"
 
 #### Setting hw CLOCK
 arch_chroot "hwclock --systohc --$CLOCK"
@@ -177,7 +186,11 @@ arch_chroot "useradd -m -g users -G adm,lp,wheel,power,audio,video -s /bin/bash 
 
 #### Definir senha do usuário 
 arch_chroot "echo -e $USER_PASSWD'\n'$USER_PASSWD | passwd `echo $USER`"
-arch_chroot "echo %wheel ALL=(ALL) ALL >> /etc/sudoers"
+arch_chroot "sed -i 's/# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/' /etc/sudoers"
+
+#### networkmanager acpi
+arch_chroot "systemctl enable NetworkManager.service"
+arch_chroot "systemctl enable acpid.service"
 
 
 #### Driver
@@ -195,11 +208,11 @@ fi
 arch_chroot "pacman -S --noconfirm xf86-input-synaptics synaptics"
 
 
-dialog --title "INTEFACE GRAFICA" --clear --yesno "Deseja Instalar Windows Manager ?" 10 30
+dialog --title "INTEFACE GRAFICA" --clear --yesno "Deseja Instalar Windows Manager ?" 9 62
 if [[ $? -eq 0 ]]; then
   arch_chroot "pacman -S --noconfirm xorg xorg-xkbcomp xorg-xinit xorg-server xorg-twm xorg-xclock xorg-xinit xorg-drivers xorg-xkill xorg-fonts-100dpi xorg-fonts-75dpi mesa xterm"
   
-  desktop=$(dialog --clear --menu "Desktop Environment" 15 30 4  1 "Gnome Minimal" 2 "Gnome" 3 "Plasma kde" 4 "cinnamon" 5 "xfce4" 6 "deepin" 7 "Minimal"  --stdout)
+  desktop=$(dialog --clear --menu "Desktop Environment" 15 30 10  1 "Gnome Minimal" 2 "Gnome" 3 "Plasma kde" 4 "cinnamon" 5 "xfce4" 6 "deepin" 7 "Minimal"  --stdout)
   case $desktop in
       1)
           DEpkg="gdm gnome-shell gnome-backgrounds gnome-control-center gnome-screenshot gnome-system-monitor gnome-terminal gnome-tweak-tool nautilus gedit gvfs gnome-calculator gnome-disk-utility"
@@ -224,29 +237,25 @@ if [[ $? -eq 0 ]]; then
   arch_chroot "pacman -Sy $DEpkg tilix mesa eog xdg-user-dirs-gtk firefox evince adwaita-icon-theme papirus-icon-theme faenza-icon-theme gparted --noconfirm --needed"
 
   case $desktop in
-      1)
+      1 | 2 | 4)
           arch_chroot "systemctl enable gdm.service"
           ;;
-      2)
-          arch_chroot "systemctl enable gdm.service"
-          ;;
-      3)
+      3 | 6)
           arch_chroot "echo -e '[Theme]\nCurrent=breeze' >> /usr/lib/sddm/sddm.conf.d/default.conf"
           arch-chroot "systemctl enable sddm.service"
           ;; 
-      4)
-          arch_chroot "systemctl enable gdm.service"
-          ;;
       5)
           arch-chroot "systemctl enable lxdm.service"
-          ;;
-      6)
-          arch_chroot "echo -e '[Theme]\nCurrent=breeze' >> /usr/lib/sddm/sddm.conf.d/default.conf"
-          arch-chroot "systemctl enable sddm.service"
           ;;
   esac
 fi
 
-exit
-umount -R /mnt
-poweroff
+dialog --clear --title " Installation finished sucessfully " --yesno "\nDo you want to reboot?" 9 62
+if [[ $? -eq 0 ]]; then
+  echo "System will reboot in a moment..."
+  sleep 3
+  clear
+  umount -R /mnt
+  reboot
+fi
+
