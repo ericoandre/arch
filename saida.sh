@@ -208,6 +208,10 @@ case $(systemd-detect-virt) in
       arch_chroot "systemctl enable vmtoolsd.service"
       arch_chroot "systemctl enable vmware-vmblock-fuse.service"
   ;;
+  oracle)
+      arch_chroot "pacman -S virtualbox-guest-utils e xf86-video-vmware --noconfirm --needed"
+      arch_chroot "systemctl enable vboxservice.service"
+  ;;
 esac
 
 #### Driver
