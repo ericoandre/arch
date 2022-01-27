@@ -13,7 +13,8 @@ SWAP_SIZE=1024
 BOOT_SIZE=512
 ROOT_SIZE=0
 
-EXTRA_PKGS="sudo go screenfetch wget cmatrix gcc htop make jre8-openjdk jre8-openjdk-headless openbsd-netcat traceroute git ntfs-3g os-prober virtualbox-guest-utils pciutils acpi acpid dbus unrar p7zip tar rsync ufw exfat-utils networkmanager iw net-tools dhclient dhcpcd neofetch nano alsa-plugins alsa-utils alsa-firmware pulseaudio pulseaudio-alsa pavucontrol volumeicon bash-completion zsh zsh-syntax-highlighting zsh-autosuggestions"
+# virtualbox-guest-utils  
+EXTRA_PKGS="sudo go ibus dbus dbus-glib dbus-python python python-pip screenfetch wget cmatrix gcc htop make jre8-openjdk jre8-openjdk-headless git ntfs-3g os-prober pciutils acpi acpid unrar p7zip tar rsync ufw iptables openbsd-netcat traceroute exfat-utils networkmanager iw net-tools dhclient dhcpcd neofetch nano alsa-plugins alsa-utils alsa-firmware pulseaudio pulseaudio-alsa pavucontrol volumeicon bash-completion zsh zsh-syntax-highlighting zsh-autosuggestions"
 
 ######## Variáveis auxiliares. NÃO DEVEM SER ALTERADAS
 BOOT_START=1
@@ -196,6 +197,19 @@ arch_chroot "sed -i 's/# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/' /etc/sudoer
 arch_chroot "systemctl enable NetworkManager.service"
 arch_chroot "systemctl enable acpid.service"
 
+#### auto-install VM drivers
+case $(systemd-detect-virt) in
+  kvm)
+      # xf86-video-qxl is disabled due to bugs on certain DEs
+      arch_chroot "pacman -S spice-vdagent --noconfirm --needed"
+  ;;
+  vmware)
+      arch_chroot "pacman -S open-vm-tools --noconfirm --needed"
+      arch_chroot "systemctl enable vmtoolsd.service"
+      arch_chroot "systemctl enable vmware-vmblock-fuse.service"
+  ;;
+esac
+
 #### Driver
 gpu_type=$(lspci)
 if grep -E "NVIDIA|GeForce" <<< ${gpu_type}; then
@@ -221,23 +235,23 @@ if [[ $? -eq 0 ]]; then
           DEpkg="gdm gnome-shell gnome-backgrounds gnome-control-center gnome-screenshot gnome-system-monitor gnome-terminal gnome-tweak-tool nautilus gedit gvfs gnome-calculator gnome-disk-utility"
           ;;
       2)
-          DEpkg="gdm gnome gnome-tweak-tool"
+          DEpkg="gdm gnome gnome-tweak-tool "
           ;;
       3)
           DEpkg="sddm plasma plasma-wayland-session dolphin konsole kate kcalc ark gwenview spectacle okular packagekit-qt5"
           ;;
       4)
-          DEpkg="gdm cinnamon sakura gnome-disk-utility nemo-fileroller mousepad"
+          DEpkg="gdm cinnamon sakura gnome-disk-utility nemo-fileroller mousepad "
           ;;
       5)
-          DEpkg="lxdm xfce4 xfce4-goodies network-manager-applet file-roller leafpad"
+          DEpkg="lxdm xfce4 xfce4-goodies network-manager-applet file-roller leafpad "
           ;;
       6)
-          DEpkg="sddm deepin deepin-extra ark gnome-disk-utility gedit"
+          DEpkg="sddm deepin deepin-extra ark gnome-disk-utility gedit "
           ;;
   esac
 
-  arch_chroot "pacman -Sy $DEpkg tilix mesa eog xdg-user-dirs-gtk gparted firefox evince adwaita-icon-theme papirus-icon-theme faenza-icon-theme --noconfirm --needed"
+  arch_chroot "pacman -Sy $DEpkg libreoffice-fresh tilix mesa eog gparted xdg-user-dirs-gtk firefox evince adwaita-icon-theme papirus-icon-theme faenza-icon-theme --noconfirm --needed"
 
   case $desktop in
       1)
