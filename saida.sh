@@ -122,6 +122,17 @@ inst_boot_load(){
     cp /mnt/usr/share/locale/en@quot/LC_MESSAGES/grub.mo /mnt/boot/grub/locale/en.mo
     arch_chroot "grub-mkconfig -o /boot/grub/grub.cfg"
 }
+
+reboote(){
+  dialog --clear --title " Installation finished sucessfully " --yesno "\nDo you want to reboot?" 9 62
+  if [[ $? -eq 0 ]]; then
+    echo "System will reboot in a moment..."
+    sleep 3
+    clear
+    umount -R /mnt
+    reboot
+  fi
+}
 ##################################################
 #                   Script                       #
 ##################################################
@@ -232,7 +243,7 @@ dialog --title "INTEFACE GRAFICA" --clear --yesno "Deseja Instalar Windows Manag
 if [[ $? -eq 0 ]]; then
   arch_chroot "pacman -S --noconfirm xorg xorg-xkbcomp xorg-xinit xorg-server xorg-twm xorg-xclock xorg-xinit xorg-drivers xorg-xkill xorg-fonts-100dpi xorg-fonts-75dpi mesa xterm"
   
-  desktop=$(dialog --clear --menu "Desktop Environment" 15 30 10  1 "Gnome Minimal" 2 "Gnome" 3 "Plasma kde" 4 "cinnamon" 5 "xfce4" 6 "deepin" 7 "Minimal"  --stdout)
+  desktop=$(dialog --clear --menu "Desktop Environment" 15 30 10  1 "Gnome Minimal" 2 "Gnome" 3 "Plasma kde" 4 "cinnamon" 5 "xfce4" 6 "deepin" 7 "LXQt" 8 "Minimal"  --stdout)
   case $desktop in
       1)
           DEpkg="gdm gnome-shell gnome-backgrounds gnome-control-center gnome-screenshot gnome-system-monitor gnome-terminal gnome-tweak-tool nautilus gedit gvfs gnome-calculator gnome-disk-utility"
@@ -244,7 +255,7 @@ if [[ $? -eq 0 ]]; then
           DEpkg="sddm plasma plasma-wayland-session dolphin konsole kate kcalc ark gwenview spectacle okular packagekit-qt5"
           ;;
       4)
-          DEpkg="gdm cinnamon sakura gnome-disk-utility nemo-fileroller mousepad "
+          DEpkg="gdm cinnamon sakura gnome-disk-utility nemo-fileroller mousepad gnome-system-monitor "
           ;;
       5)
           DEpkg="lxdm xfce4 xfce4-goodies network-manager-applet file-roller leafpad "
@@ -252,9 +263,15 @@ if [[ $? -eq 0 ]]; then
       6)
           DEpkg="sddm deepin deepin-extra ark gnome-disk-utility gedit "
           ;;
+      7)
+          DEpkg="lxqt xdg-utils ttf-freefont libpulse libstatgrab libsysstat lm_sensors network-manager-applet oxygen-icons pavucontrol-qt sddm "
+          ;;
+      8)
+          reboote
+          ;; 
   esac
 
-  arch_chroot "pacman -Sy $DEpkg libreoffice-fresh tilix mesa eog gparted xdg-user-dirs-gtk firefox evince adwaita-icon-theme papirus-icon-theme faenza-icon-theme --noconfirm --needed"
+  arch_chroot "pacman -Sy $DEpkg pulseaudio pulseaudio-alsa pavucontrol xscreensaver vlc archlinux-wallpaper libreoffice-fresh tilix mesa eog gparted xdg-user-dirs-gtk firefox evince adwaita-icon-theme papirus-icon-theme faenza-icon-theme --noconfirm --needed"
 
   case $desktop in
       1)
@@ -276,16 +293,12 @@ if [[ $? -eq 0 ]]; then
       6)
           arch_chroot "echo -e '[Theme]\nCurrent=breeze' >> /usr/lib/sddm/sddm.conf.d/default.conf"
           arch-chroot "systemctl enable sddm.service"
-          ;; 
+          ;;
+      7)
+          arch_chroot "echo -e '[Theme]\nCurrent=breeze' >> /usr/lib/sddm/sddm.conf.d/default.conf"
+          arch-chroot "systemctl enable sddm.service"
+          ;;   
   esac
 fi
 
-dialog --clear --title " Installation finished sucessfully " --yesno "\nDo you want to reboot?" 9 62
-if [[ $? -eq 0 ]]; then
-  echo "System will reboot in a moment..."
-  sleep 3
-  clear
-  umount -R /mnt
-  reboot
-fi
-
+reboote
