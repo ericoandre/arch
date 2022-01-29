@@ -31,7 +31,7 @@ yay -S --noconfirm --needed  chrome-gnome-shell gnome-shell-extension-dash-to-do
 ### powerlevel10k
 
 ```bash
-yay -S --noconfirm --needed nerd-fonts-fira-code nordic-darker-standard-buttons-theme nordic-darker-theme nordic-theme 
+yay -S --noconfirm --needed nerd-fonts-fira-code nordic-darker-standard-buttons-theme nordic-darker-theme nordic-theme numix-themes
 
 touch .cache/zshhistory
 mv arch/zsh .zsh
@@ -66,6 +66,31 @@ sudo tar -xzvf ~/Downloads/sugar-dark.tar.gz -C /usr/share/sddm/themes
 Current=sugar-candy
 
 qt5-graphicaleffects
+
+
+
+
+pacman -S pulseaudio pulseaudio-alsa pavucontrol gnome-terminal firefox flashplugin vlc chromium unzip unrar p7zip pidgin skype deluge smplayer audacious qmmp gimp xfburn thunderbird gedit gnome-system-monitor
+
+
+pacman -S a52dec faac faad2 flac jasper lame libdca libdv libmad libmpeg2 libtheora libvorbis libxv wavpack x264 xvidcore gstreamer0.10-plugins
+
+
+pacman -S libgtop
+
+
+
+
+
+
+
+conky-lua-archers
+arcolinux-conky-collection-git
+arcolinux-pipemenus-git
+yad
+libpulse
+
+
  -->
 
 <!-- pacman -S gdm gnome-shell gnome-control-center gnome-tweak-tool -->
