@@ -46,3 +46,23 @@ chsh -s /usr/bin/zsh
 ```bash
 sudo pacman -S --noconfirm wine lib324-vkd3d lib324-libldap wine-mono wine-gecko winetricks
 ```
+
+<!-- 
+The Windows .efi file
+
+mkdir -p /mnt/EFI/Microsoft/Boot
+cp /mnt/EFI/grub/grubx64.efi /mnt/EFI/Microsoft/Boot/bootmgfw.efi
+
+EFI fallback .efi file (as defined in the EFI standard.)
+
+mkdir -p /mnt/EFI/BOOT
+cp /mnt/EFI/grub/grub64.efi /mnt/EFI/BOOT/bootx64.efi
+ -->
+
+<!-- pacman -S gdm gnome-shell gnome-control-center gnome-tweak-tool -->
+<!-- pacmam -S nautilus chromium -->
+<!-- systemctl enable gdm.service -->
+
+
+
+
