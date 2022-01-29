@@ -57,6 +57,15 @@ EFI fallback .efi file (as defined in the EFI standard.)
 
 mkdir -p /mnt/EFI/BOOT
 cp /mnt/EFI/grub/grub64.efi /mnt/EFI/BOOT/bootx64.efi
+
+https://www.xfce-look.org/p/1272122
+sudo tar -xzvf ~/Downloads/sugar-dark.tar.gz -C /usr/share/sddm/themes
+'/etc/sddm.conf/usr/lib/sddm/sddm.conf.d/sddm.conf'.
+
+[Theme]
+Current=sugar-candy
+
+qt5-graphicaleffects
  -->
 
 <!-- pacman -S gdm gnome-shell gnome-control-center gnome-tweak-tool -->
