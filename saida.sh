@@ -13,7 +13,7 @@ SWAP_SIZE=1024
 BOOT_SIZE=512
 ROOT_SIZE=0
 
-EXTRA_PKGS="sudo go ibus dbus dbus-glib dbus-python python python-pip screenfetch wget cmatrix gcc htop make jre8-openjdk jre8-openjdk-headless git ntfs-3g os-prober pciutils acpi acpid unrar p7zip tar rsync ufw iptables openbsd-netcat traceroute exfat-utils networkmanager iw net-tools dhclient dhcpcd neofetch nano alsa-plugins alsa-utils alsa-firmware pulseaudio pulseaudio-alsa pavucontrol volumeicon bash-completion zsh zsh-syntax-highlighting zsh-autosuggestions"
+EXTRA_PKGS="ntp sudo go ibus dbus dbus-glib dbus-python python python-pip screenfetch wget cmatrix gcc htop make jre8-openjdk jre8-openjdk-headless git ntfs-3g os-prober pciutils acpi acpid unrar p7zip tar rsync ufw iptables openbsd-netcat traceroute nmap exfat-utils networkmanager iw net-tools dhclient dhcpcd neofetch nano alsa-plugins alsa-utils alsa-firmware pulseaudio pulseaudio-alsa pavucontrol volumeicon bash-completion zsh zsh-syntax-highlighting zsh-autosuggestions"
 
 ######## Variáveis auxiliares. NÃO DEVEM SER ALTERADAS
 BOOT_START=1
@@ -89,7 +89,7 @@ conf_repositorio(){
 inst_base(){
   #### Install base system
   # pacstrap /mnt base bash nano vim-minimal vi linux-firmware cryptsetup e2fsprogs findutils gawk inetutils iproute2 jfsutils licenses linux-firmware logrotate lvm2 man-db man-pages mdadm pciutils procps-ng reiserfsprogs sysfsutils xfsprogs usbutils `echo $kernel`
-  pacstrap /mnt base base-devel linux linux-headers linux-firmware ttf-liberation ttf-dejavu ttf-hack ttf-roboto grub `echo $EXTRA_PKGS`
+  pacstrap /mnt base base-devel linux linux-headers linux-firmware ttf-droid noto-fonts  ttf-liberation ttf-dejavu ttf-hack ttf-roboto grub `echo $EXTRA_PKGS`
   
   #### fstab
   genfstab -U -p /mnt >> /mnt/etc/fstab
@@ -204,8 +204,7 @@ arch_chroot "echo -e $USER_PASSWD'\n'$USER_PASSWD | passwd `echo $USER`"
 arch_chroot "sed -i 's/# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/' /etc/sudoers"
 
 #### networkmanager acpi
-arch_chroot "systemctl enable NetworkManager.service"
-arch_chroot "systemctl enable acpid.service"
+arch_chroot "systemctl enable NetworkManager.service acpid.service ntpd.service"
 
 #### auto-install VM drivers
 case $(systemd-detect-virt) in
@@ -268,7 +267,7 @@ if [[ $? -eq 0 ]]; then
           ;;
       8)
           reboote
-          ;; 
+          ;;
   esac
 
   arch_chroot "pacman -Sy $DEpkg pulseaudio pulseaudio-alsa pavucontrol xscreensaver vlc archlinux-wallpaper libreoffice-fresh tilix mesa eog gparted xdg-user-dirs-gtk firefox evince adwaita-icon-theme papirus-icon-theme faenza-icon-theme --noconfirm --needed"
@@ -297,9 +296,8 @@ if [[ $? -eq 0 ]]; then
       7)
           arch_chroot "echo -e '[Theme]\nCurrent=breeze' >> /usr/lib/sddm/sddm.conf.d/default.conf"
           arch-chroot "systemctl enable sddm.service"
-          ;;   
+          ;;
   esac
 fi
-
 
 reboote
