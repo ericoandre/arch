@@ -13,7 +13,7 @@ SWAP_SIZE=1024
 BOOT_SIZE=512
 ROOT_SIZE=0
 
-EXTRA_PKGS="ntp sudo go ibus dbus dbus-glib dbus-python python python-pip screenfetch wget cmatrix gcc htop make jre8-openjdk jre8-openjdk-headless git ntfs-3g os-prober pciutils acpi acpid unrar p7zip tar rsync ufw iptables openbsd-netcat traceroute nmap exfat-utils networkmanager iw net-tools dhclient dhcpcd neofetch nano alsa-plugins alsa-utils alsa-firmware pulseaudio pulseaudio-alsa pavucontrol volumeicon bash-completion zsh zsh-syntax-highlighting zsh-autosuggestions"
+EXTRA_PKGS="ntp sudo go ibus dbus dbus-glib dbus-python python python-pip scrot screenfetch neofeth wget cmatrix gcc htop make jre8-openjdk jre8-openjdk-headless git ntfs-3g os-prober pciutils acpi acpid unrar p7zip tar rsync ufw iptables openbsd-netcat traceroute nmap exfat-utils networkmanager iw net-tools dhclient dhcpcd neofetch nano alsa-plugins alsa-utils alsa-firmware pulseaudio pulseaudio-alsa pavucontrol volumeicon bash-completion zsh zsh-syntax-highlighting zsh-autosuggestions"
 
 ######## Variáveis auxiliares. NÃO DEVEM SER ALTERADAS
 BOOT_START=1
@@ -89,7 +89,7 @@ conf_repositorio(){
 inst_base(){
   #### Install base system
   # pacstrap /mnt base bash nano vim-minimal vi linux-firmware cryptsetup e2fsprogs findutils gawk inetutils iproute2 jfsutils licenses linux-firmware logrotate lvm2 man-db man-pages mdadm pciutils procps-ng reiserfsprogs sysfsutils xfsprogs usbutils `echo $kernel`
-  pacstrap /mnt base base-devel linux linux-headers linux-firmware ttf-droid noto-fonts  ttf-liberation ttf-dejavu ttf-hack ttf-roboto grub `echo $EXTRA_PKGS`
+  pacstrap /mnt base base-devel linux linux-headers linux-firmware ttf-droid noto-fonts  ttf-liberation ttf-freefont ttf-dejavu ttf-hack ttf-roboto grub `echo $EXTRA_PKGS`
   
   #### fstab
   genfstab -U -p /mnt >> /mnt/etc/fstab
@@ -254,7 +254,7 @@ if [[ $? -eq 0 ]]; then
           DEpkg="sddm plasma plasma-wayland-session dolphin konsole kate kcalc ark gwenview spectacle okular packagekit-qt5 "
           ;;
       4)
-          DEpkg="gdm cinnamon sakura gnome-disk-utility nemo-fileroller mousepad gnome-system-monitor "
+          DEpkg="gdm cinnamon sakura gnome-disk-utility nemo-fileroller mousepad gnome-software gnome-system-monitor gnome-screenshot network-manager-applet "
           ;;
       5)
           DEpkg="lxdm xfce4 xfce4-goodies network-manager-applet file-roller leafpad "
@@ -263,15 +263,16 @@ if [[ $? -eq 0 ]]; then
           DEpkg="sddm deepin deepin-extra ark gnome-disk-utility gedit "
           ;;
       7)
-          DEpkg="gdm lxqt xdg-utils ttf-freefont libpulse libstatgrab libsysstat lm_sensors network-manager-applet pavucontrol-qt "
+          DEpkg="gdm lxqt xdg-utils libpulse libstatgrab libsysstat lm_sensors network-manager-applet pavucontrol-qt "
           ;;
       8)
           reboote
           ;;
   esac
 
-  arch_chroot "pacman -Sy $DEpkg pulseaudio pulseaudio-alsa pavucontrol xscreensaver vlc archlinux-wallpaper libreoffice-fresh tilix mesa eog gparted xdg-user-dirs-gtk firefox evince adwaita-icon-theme papirus-icon-theme oxygen-icons faenza-icon-theme --noconfirm --needed"
+  arch_chroot "pacman -Sy $DEpkg audacious pulseaudio pulseaudio-alsa pavucontrol xscreensaver vlc archlinux-wallpaper libreoffice-fresh tilix mesa eog gparted xdg-user-dirs-gtk firefox flashplugin evince adwaita-icon-theme papirus-icon-theme oxygen-icons faenza-icon-theme --noconfirm --needed"
 
+  
   case $desktop in
       1)
           arch_chroot "systemctl enable gdm.service"
