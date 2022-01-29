@@ -32,3 +32,9 @@ mv arch/zsh .zsh
 git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/.powerlevel10k
 ln -s zsh/zshrc ~/.zshrc
 ```
+
+### wine
+
+```bash
+sudo pacman -S --noconfirm wine lib324-vkd3d wine-mono wine-gecko winetricks
+```
