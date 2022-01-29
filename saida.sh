@@ -13,7 +13,7 @@ SWAP_SIZE=1024
 BOOT_SIZE=512
 ROOT_SIZE=0
 
-EXTRA_PKGS="ntp sudo go ibus dbus dbus-glib dbus-python python python-pip scrot screenfetch neofeth wget cmatrix gcc htop make jre8-openjdk jre8-openjdk-headless git ntfs-3g os-prober pciutils acpi acpid unrar p7zip tar rsync ufw iptables openbsd-netcat traceroute nmap exfat-utils networkmanager iw net-tools dhclient dhcpcd neofetch nano alsa-plugins alsa-utils alsa-firmware pulseaudio pulseaudio-alsa pavucontrol volumeicon bash-completion zsh zsh-syntax-highlighting zsh-autosuggestions"
+EXTRA_PKGS="ntp sudo go ibus dbus dbus-glib dbus-python python python-pip scrot screenfetch wget cmatrix gcc htop make jre8-openjdk jre8-openjdk-headless git ntfs-3g os-prober pciutils acpi acpid unrar p7zip tar rsync ufw iptables openbsd-netcat traceroute nmap exfat-utils networkmanager iw net-tools dhclient dhcpcd neofetch nano alsa-plugins alsa-utils alsa-firmware pulseaudio pulseaudio-alsa pavucontrol volumeicon bash-completion zsh zsh-syntax-highlighting zsh-autosuggestions"
 
 ######## Variáveis auxiliares. NÃO DEVEM SER ALTERADAS
 BOOT_START=1
