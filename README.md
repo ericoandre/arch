@@ -15,26 +15,34 @@ grub-mkconfig -o /boot/grub/grub.cfg
 ```
 
 ### Yay
+
 ```bash
 cd /tmp && git clone https://aur.archlinux.org/yay.git
 cd /tmp/yay && makepkg -si --noconfirm
-cd .. && rm -rf /tmp/yay
+cd ~ && rm -rf /tmp/yay
 ```
 
+### gnome-extension
+
+```
+yay -S --noconfirm --needed  chrome-gnome-shell gnome-shell-extension-dash-to-dock 
+```
 
 ### powerlevel10k
 
 ```bash
-yay -S --noconfirm --needed nerd-fonts-fira-code nordic-darker-standard-buttons-theme nordic-darker-theme nordic-theme chrome-gnome-shell gnome-shell-extension-dash-to-dock 
+yay -S --noconfirm --needed nerd-fonts-fira-code nordic-darker-standard-buttons-theme nordic-darker-theme nordic-theme 
 
 touch .cache/zshhistory
 mv arch/zsh .zsh
 git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/.powerlevel10k
-ln -s zsh/zshrc ~/.zshrc
+ln -s ~/.zsh/zshrc .zshrc
+
+chsh -s /usr/bin/zsh
 ```
 
 ### wine
 
 ```bash
-sudo pacman -S --noconfirm wine lib324-vkd3d wine-mono wine-gecko winetricks
+sudo pacman -S --noconfirm wine lib324-vkd3d lib324-libldap wine-mono wine-gecko winetricks
 ```
