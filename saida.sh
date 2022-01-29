@@ -113,7 +113,7 @@ inst_boot_load(){
 
     if [[ -d "/sys/firmware/efi/" ]]; then
         arch_chroot "pacman -S --noconfirm efibootmgr dosfstools mtools"
-        arch_chroot "grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=grub_uefi --recheck"
+        arch_chroot "grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB --recheck"
         mkdir /mnt/boot/efi/EFI/boot && mkdir /mnt/boot/grub/locale
         cp /mnt/boot/efi/EFI/grub_uefi/grubx64.efi /mnt/boot/efi/EFI/boot/bootx64.efi
     else
