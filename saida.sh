@@ -251,7 +251,7 @@ if [[ $? -eq 0 ]]; then
           DEpkg="gdm gnome gnome-tweak-tool "
           ;;
       3)
-          DEpkg="sddm plasma plasma-wayland-session dolphin konsole kate kcalc ark gwenview spectacle okular packagekit-qt5"
+          DEpkg="sddm plasma plasma-wayland-session dolphin konsole kate kcalc ark gwenview spectacle okular packagekit-qt5 "
           ;;
       4)
           DEpkg="gdm cinnamon sakura gnome-disk-utility nemo-fileroller mousepad gnome-system-monitor "
@@ -263,14 +263,14 @@ if [[ $? -eq 0 ]]; then
           DEpkg="sddm deepin deepin-extra ark gnome-disk-utility gedit "
           ;;
       7)
-          DEpkg="lxqt xdg-utils ttf-freefont libpulse libstatgrab libsysstat lm_sensors network-manager-applet oxygen-icons pavucontrol-qt sddm "
+          DEpkg="gdm lxqt xdg-utils ttf-freefont libpulse libstatgrab libsysstat lm_sensors network-manager-applet pavucontrol-qt "
           ;;
       8)
           reboote
           ;;
   esac
 
-  arch_chroot "pacman -Sy $DEpkg pulseaudio pulseaudio-alsa pavucontrol xscreensaver vlc archlinux-wallpaper libreoffice-fresh tilix mesa eog gparted xdg-user-dirs-gtk firefox evince adwaita-icon-theme papirus-icon-theme faenza-icon-theme --noconfirm --needed"
+  arch_chroot "pacman -Sy $DEpkg pulseaudio pulseaudio-alsa pavucontrol xscreensaver vlc archlinux-wallpaper libreoffice-fresh tilix mesa eog gparted xdg-user-dirs-gtk firefox evince adwaita-icon-theme papirus-icon-theme oxygen-icons faenza-icon-theme --noconfirm --needed"
 
   case $desktop in
       1)
@@ -294,8 +294,7 @@ if [[ $? -eq 0 ]]; then
           arch-chroot "systemctl enable sddm.service"
           ;;
       7)
-          arch_chroot "echo -e '[Theme]\nCurrent=breeze' >> /usr/lib/sddm/sddm.conf.d/default.conf"
-          arch-chroot "systemctl enable sddm.service"
+          arch_chroot "systemctl enable gdm.service"
           ;;
   esac
 fi
