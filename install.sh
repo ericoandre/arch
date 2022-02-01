@@ -241,7 +241,7 @@ install_bootloader() {
 
 timedatectl set-ntp true
 [[ $FONT != "" ]] && setfont $FONT
-loadkeys $KEYBOARD_LAYOUT  # br-abnt2
+loadkeys $KEYMAP  # br-abnt2
 
 #### Particionamento esta configurado para usar todo o hd
 automatic_particao
