@@ -172,12 +172,12 @@ install_descktopmanager() {
           DMANAGER=3
           ;;
         6)
-          DEpkg="lightdm lightdm-webkit2-greeter deepin deepin-extra ark gnome-disk-utility gedit "
+          DEpkg="lightdm lightdm-webkit2-greeter accountsservice deepin deepin-extra ark gnome-disk-utility gedit "
           DMANAGER=4
           ;;
         7)
-          DEpkg="gdm lxqt xdg-utils libpulse libstatgrab libsysstat lm_sensors network-manager-applet pavucontrol-qt "
-          DMANAGER=1
+          DEpkg="lxdm lxqt xdg-utils libpulse libstatgrab libsysstat lm_sensors network-manager-applet pavucontrol-qt "
+          DMANAGER=3
           ;;
     esac
     arch_chroot "pacman -Sy $DEpkg audacious pulseaudio pulseaudio-alsa pavucontrol xscreensaver vlc archlinux-wallpaper libreoffice-fresh tilix mesa eog gparted xdg-user-dirs-gtk firefox evince adwaita-icon-theme papirus-icon-theme oxygen-icons faenza-icon-theme --noconfirm --needed"
