@@ -148,56 +148,57 @@ install_driver_videos() {
 
 install_descktopmanager() {
     install_driver_videos
-    Xorpkg="xorg xorg-xkbcomp xorg-xinit xorg-server xorg-twm xorg-xclock xorg-xinit xorg-drivers xorg-xkill xorg-fonts-100dpi xorg-fonts-75dpi mesa xterm"
+    arch_chroot "pacman -Sy xorg xorg-xkbcomp xorg-xinit xorg-server xorg-twm xorg-xclock xorg-xinit xorg-drivers xorg-xkill xorg-fonts-100dpi xorg-fonts-75dpi mesa xterm --noconfirm --needed"
     desktop=$(dialog --clear --menu "Desktop Environment" 15 30 10  1 "Gnome Minimal" 2 "Gnome" 3 "Plasma kde" 4 "cinnamon" 5 "xfce4" 6 "deepin" 7 "LXQt" 8 "Minimal"  --stdout)
     case $desktop in
         1)
           DEpkg="gdm gnome-shell gnome-backgrounds gnome-control-center gnome-screenshot gnome-system-monitor gnome-terminal gnome-tweak-tool nautilus gedit gvfs gnome-calculator gnome-disk-utility"
+          DMANAGER=1
           ;;
         2)
           DEpkg="gdm gnome gnome-tweak-tool "
+          DMANAGER=1
           ;;
         3)
           DEpkg="sddm plasma plasma-wayland-session dolphin konsole kate kcalc ark gwenview spectacle okular packagekit-qt5 "
+          DMANAGER=2
           ;;
         4)
           DEpkg="gdm cinnamon sakura gnome-disk-utility nemo-fileroller mousepad gnome-software gnome-system-monitor gnome-screenshot network-manager-applet "
+          DMANAGER=1
           ;;
         5)
           DEpkg="lxdm xfce4 xfce4-goodies network-manager-applet file-roller leafpad "
+          DMANAGER=3
           ;;
         6)
-          DEpkg="sddm deepin deepin-extra ark gnome-disk-utility gedit "
+          DEpkg="lightdm lightdm-webkit2-greeter deepin deepin-extra ark gnome-disk-utility gedit "
+          DMANAGER=4
           ;;
         7)
           DEpkg="gdm lxqt xdg-utils libpulse libstatgrab libsysstat lm_sensors network-manager-applet pavucontrol-qt "
+          DMANAGER=1
           ;;
     esac
-    arch_chroot "pacman -Sy $Xorpkg $DEpkg audacious pulseaudio pulseaudio-alsa pavucontrol xscreensaver vlc archlinux-wallpaper libreoffice-fresh tilix mesa eog gparted xdg-user-dirs-gtk firefox evince adwaita-icon-theme papirus-icon-theme oxygen-icons faenza-icon-theme --noconfirm --needed"
-    case $desktop in
+    arch_chroot "pacman -Sy $DEpkg audacious pulseaudio pulseaudio-alsa pavucontrol xscreensaver vlc archlinux-wallpaper libreoffice-fresh tilix mesa eog gparted xdg-user-dirs-gtk firefox evince adwaita-icon-theme papirus-icon-theme oxygen-icons faenza-icon-theme --noconfirm --needed"
+    case $DMANAGER in
         1)
           arch_chroot "systemctl enable gdm.service"
           ;;
         2)
-          arch_chroot "systemctl enable gdm.service"
-          ;;
-        3)
           arch_chroot "echo -e '[Theme]\nCurrent=breeze' >> /usr/lib/sddm/sddm.conf.d/default.conf"
           arch-chroot "systemctl enable sddm.service"
           ;; 
-        4)
-          arch_chroot "systemctl enable gdm.service"
-          ;;
-        5)
+        3)
           arch-chroot "systemctl enable lxdm.service"
           ;;
-        6)
-          arch_chroot "echo -e '[Theme]\nCurrent=breeze' >> /usr/lib/sddm/sddm.conf.d/default.conf"
-          arch-chroot "systemctl enable sddm.service"
+        4)
+          wget git.io/webkit2 -O tema.tar.gz && mkdir -p ${MOUNTPOINT}/usr/share/lightdm-webkit/themes/glorious
+          tar zxvf tema.tar.gz -C ${MOUNTPOINT}/usr/share/lightdm-webkit/themes/glorious
+          echo "webkit_theme=glorious" >> ${MOUNTPOINT}/etc/lightdm/lightdm-webkit2-greeter.conf
+          arch-chroot "systemctl enable lightdm.service"
           ;;
-        7)
-          arch_chroot "systemctl enable gdm.service"
-          ;;
+          
     esac
 }
 
@@ -209,6 +210,10 @@ install_root() {
     
     #### networkmanager acpi
     arch_chroot "systemctl enable NetworkManager.service acpid.service ntpd.service"
+    
+    cp /etc/pacman.d/mirrorlist ${MOUNTPOINT}/etc/pacman.d/mirrorlist
+    [[ "$(uname -m)" = "x86_64" ]] && sed -i '/multilib\]/,+1 s/^#//' ${MOUNTPOINT}/etc/pacman.conf
+    git clone https://aur.archlinux.org/yay.git ${MOUNTPOINT}/tmp
 }
 
 install_bootloader() {
@@ -219,6 +224,7 @@ install_bootloader() {
         pacstrap ${MOUNTPOINT} amd-ucode
     fi
     
+    # Configura ambiente ramdisk inicial
     arch_chroot "mkinitcpio -p linux"
     if [[ "$SYSTEM" -eq "UEFI"  ]]; then
         arch_chroot "pacman -S --noconfirm efibootmgr dosfstools mtools"
