@@ -81,25 +81,25 @@ automatic_particao() {
     Parted "mkpart primary $ROOT_FS $ROOT_START $ROOT_END"
     
     # Formatando partição root
-    mkfs.ext4 ${HD}2 -L Root
-    mount ${HD}2 ${MOUNTPOINT}
+    mkfs.ext4 $HD2 -L Root
+    mount ${HD}2 $MOUNTPOINT
     
     if [[ "$SYSTEM" -eq "UEFI" ]]; then
         # Monta partição esp
-        mkdir -p ${MOUNTPOINT}/boot/efi && mount ${HD}1 ${MOUNTPOINT}/boot/efi
+        mkdir -p $MOUNTPOINT/boot/efi && mount $HD1 $MOUNTPOINT/boot/efi
     else
         # Monta partição boot
-        mkdir -p ${MOUNTPOINT}/boot && mount ${HD}1 ${MOUNTPOINT}/boot
+        mkdir -p $MOUNTPOINT/boot && mount $HD1 $MOUNTPOINT/boot
     fi
     
-    mkdir -p  ${MOUNTPOINT}/opt/swap && touch ${MOUNTPOINT}/opt/swap/swapfile
-    dd if=/dev/zero of=${MOUNTPOINT}/opt/swap/swapfile bs=1M count=$SWAP_SIZE status=progress
-    chmod 600 ${MOUNTPOINT}/opt/swap/swapfile
-    mkswap ${MOUNTPOINT}/opt/swap/swapfile
-    swapon ${MOUNTPOINT}/opt/swap/swapfile
+    mkdir -p  $MOUNTPOINT/opt/swap && touch $MOUNTPOINT/opt/swap/swapfile
+    dd if=/dev/zero of=$MOUNTPOINT/opt/swap/swapfile bs=1M count=$SWAP_SIZE status=progress
+    chmod 600 $MOUNTPOINT/opt/swap/swapfile
+    mkswap $MOUNTPOINT/opt/swap/swapfile
+    swapon $MOUNTPOINT/opt/swap/swapfile
   
-    genfstab -U -p ${MOUNTPOINT} >> ${MOUNTPOINT}/etc/fstab
-    echo "/opt/swap/swapfile             none    swap    sw        0       0" >> ${MOUNTPOINT}/etc/fstab 
+    genfstab -U -p $MOUNTPOINT >> $MOUNTPOINT/etc/fstab
+    echo "/opt/swap/swapfile             none    swap    sw        0       0" >> $MOUNTPOINT/etc/fstab 
 }
 
 reboote(){
@@ -108,7 +108,7 @@ reboote(){
         echo "System will reboot in a moment..."
         sleep 3
         clear
-        umount -R ${MOUNTPOINT}
+        umount -R $MOUNTPOINT
         reboot
     fi
 }
@@ -193,9 +193,9 @@ install_descktopmanager() {
           arch-chroot "systemctl enable lxdm.service"
           ;;
         4)
-          wget git.io/webkit2 -O tema.tar.gz && mkdir -p ${MOUNTPOINT}/usr/share/lightdm-webkit/themes/glorious
-          tar zxvf tema.tar.gz -C ${MOUNTPOINT}/usr/share/lightdm-webkit/themes/glorious
-          echo "webkit_theme=glorious" >> ${MOUNTPOINT}/etc/lightdm/lightdm-webkit2-greeter.conf
+          wget git.io/webkit2 -O tema.tar.gz && mkdir -p $MOUNTPOINT/usr/share/lightdm-webkit/themes/glorious
+          tar zxvf tema.tar.gz -C $MOUNTPOINT/usr/share/lightdm-webkit/themes/glorious
+          echo "webkit_theme=glorious" >> $MOUNTPOINT/etc/lightdm/lightdm-webkit2-greeter.conf
           arch-chroot "systemctl enable lightdm.service"
           ;;
           
@@ -212,8 +212,8 @@ install_root() {
     arch_chroot "systemctl enable NetworkManager.service acpid.service ntpd.service"
     
     cp /etc/pacman.d/mirrorlist ${MOUNTPOINT}/etc/pacman.d/mirrorlist
-    [[ "$(uname -m)" = "x86_64" ]] && sed -i '/multilib\]/,+1 s/^#//' ${MOUNTPOINT}/etc/pacman.conf
-    git clone https://aur.archlinux.org/yay.git ${MOUNTPOINT}/tmp
+    [[ "$(uname -m)" = "x86_64" ]] && sed -i '/multilib\]/,+1 s/^#//' $MOUNTPOINT/etc/pacman.conf
+    git clone https://aur.archlinux.org/yay.git $MOUNTPOINT/tmp
 }
 
 install_bootloader() {
@@ -298,9 +298,6 @@ echo -e "KEYMAP=$KEYMAP\nFONT=$FONT" > $MOUNTPOINT/etc/vconsole.conf
 
 #### Setting timezone
 arch_chroot "ln -s /usr/share/zoneinfo/$ZONE/$SUBZONE /etc/localtime"
-
-#### enable multilib
-sed -i '/multilib\]/,+1 s/^#//' $MOUNTPOINT/etc/pacman.conf
 
 #### Setting hw CLOCK
 arch_chroot "hwclock --systohc --$CLOCK"
