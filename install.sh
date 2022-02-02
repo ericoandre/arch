@@ -159,49 +159,49 @@ install_descktopmanager() {
     case $desktop in
         1)
           DEpkg="gnome-shell gnome-backgrounds gnome-control-center gnome-screenshot gnome-system-monitor gnome-terminal gnome-tweak-tool nautilus gedit gvfs gnome-calculator gnome-disk-utility"
+          DMANAGER=1
           ;;
         2)
           DEpkg="gnome gnome-tweak-tool "
+          DMANAGER=1
           ;;
         3)
           DEpkg="plasma plasma-wayland-session dolphin konsole kate kcalc ark gwenview spectacle okular packagekit-qt5 "
+          DMANAGER=2
           ;;
         4)
           DEpkg="cinnamon sakura gnome-disk-utility nemo-fileroller mousepad gnome-software gnome-system-monitor gnome-screenshot network-manager-applet "
+          DMANAGER=2
           ;;
         5)
           DEpkg="xfce4 xfce4-goodies network-manager-applet file-roller leafpad "
+          DMANAGER=3
           ;;
         6)
           DEpkg="deepin deepin-extra ark gnome-disk-utility gedit "
+          DMANAGER=2
           ;;
         7)
           DEpkg="lxqt xdg-utils libpulse libstatgrab libsysstat lm_sensors network-manager-applet pavucontrol-qt "
+          DMANAGER=3
           ;;
     esac
     arch_chroot "pacman -Sy $DEpkg audacious pulseaudio pulseaudio-alsa pavucontrol xscreensaver vlc archlinux-wallpaper libreoffice-fresh tilix mesa eog gparted xdg-user-dirs-gtk firefox evince adwaita-icon-theme papirus-icon-theme oxygen-icons faenza-icon-theme --noconfirm --needed"
 
-    DMANAGER=$(dialog  --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Dm " --menu  "Qual gerenciador de exibição você gostaria de usar?" 12 50 50 1 gdm 2 lightdm 3 lxdm 4 sddm --stdout )
+    # DMANAGER=$(dialog  --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Display Manager " --menu  "Qual gerenciador de exibição você gostaria de usar?" 12 50 50 1 gdm 2 sddm 3 lxdm --stdout )
     case $DMANAGER in
         1)
           arch_chroot "pacman -Sy gdm --noconfirm --needed"
           arch_chroot "systemctl enable gdm.service"
           ;;
         2)
-          arch_chroot "pacman -Sy lightdm lightdm-webkit2-greeter accountsservice"
-          #wget git.io/webkit2 -O tema.tar.gz && mkdir -p /mnt/usr/share/lightdm-webkit/themes/glorious
-          #tar zxvf tema.tar.gz -C /mnt/usr/share/lightdm-webkit/themes/glorious
-          # echo "webkit_theme=glorious" >> /mnt/etc/lightdm/lightdm-webkit2-greeter.conf
-          arch-chroot "systemctl enable lightdm.service"
+          arch_chroot "pacman -Sy sddm --noconfirm --needed"
+          arch_chroot "echo -e '[Theme]\nCurrent=breeze' >> /usr/lib/sddm/sddm.conf.d/default.conf"
+          arch-chroot "systemctl enable sddm.service"
           ;;
         3)
           arch_chroot "pacman -Sy lxdm --noconfirm --needed"
           arch-chroot "systemctl enable lxdm.service"
-          ;;
-        4)
-          arch_chroot "pacman -Sy sddm --noconfirm --needed"
-          #arch_chroot "echo -e '[Theme]\nCurrent=breeze' >> /usr/lib/sddm/sddm.conf.d/default.conf"
-          arch-chroot "systemctl enable sddm.service"
           ;;
     esac
 }
@@ -315,13 +315,6 @@ root_password
 USER=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Criar Novo Usuário " --inputbox "\nDigite o nome do usuário. As letras DEVEM ser minúsculas.\n" 10 50 --stdout)
 user_password
 
-#### configure base system
-dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "INTEFACE GRAFICA" --clear --yesno "\nDeseja Instalar Windows Manager ?" 7 50
-if [[ $? -eq 0 ]]; then
-    install_driver_videos
-    install_descktopmanager
-fi
-
 #### setting hostname
 echo $HNAME > /mnt/etc/hostname
 echo -e "127.0.0.1    localhost.localdomain    localhost\n::1        localhost.localdomain    localhost\n127.0.1.1    $HNAME.localdomain    $HNAME" >> /mnt/etc/hosts
@@ -348,5 +341,13 @@ arch_chroot "echo -e $ROOT_PASSWD'\n'$ROOT_PASSWD | passwd"
 arch_chroot "useradd -m -g users -G adm,lp,wheel,power,audio,video -s /bin/bash ${USER}"
 arch_chroot "echo -e $USER_PASSWD'\n'$USER_PASSWD | passwd `echo $USER`"
 arch_chroot "sed -i 's/# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/' /etc/sudoers"
+
+
+#### configure base system
+dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "INTEFACE GRAFICA" --clear --yesno "\nDeseja Instalar Windows Manager ?" 7 50
+if [[ $? -eq 0 ]]; then
+    install_driver_videos
+    install_descktopmanager
+fi
 
 reboote
