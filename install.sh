@@ -179,12 +179,12 @@ install_descktopmanager() {
           DEpkg="lxqt xdg-utils libpulse libstatgrab libsysstat lm_sensors network-manager-applet pavucontrol-qt "
           ;;
     esac
-    arch_chroot "pacman -Sy $DEpkg audacious pulseaudio pulseaudio-alsa pavucontrol xscreensaver vlc archlinux-wallpaper libreoffice-fresh tilix mesa eog gparted xdg-user-dirs-gtk firefox evince adwaita-icon-theme papirus-icon-theme oxygen-icons faenza-icon-theme --noconfirm --needed"
+    arch_chroot "pacman -Sy $DEpkg audacious pulseaudio pulseaudio-alsa pavucontrol xscreensaver vlc archlinux-wallpaper libreoffice-fresh tilix mesa eog gparted xdg-user-dirs-gtk firefox evince adwaita-icon-theme papirus-icon-theme oxygen-icons faenza-icon-theme --noconfirm --needed "
 
     DMANAGER=$(dialog  --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Dm " --menu  "Qual gerenciador de exibição você gostaria de usar?" 12 50 50 1 gdm 2 lightdm 3 lxdm 4 sddm --stdout )
     case $DMANAGER in
         1)
-          arch_chroot "pacman -Sy gdm"
+          arch_chroot "pacman -Sy gdm --noconfirm --needed"
           arch_chroot "systemctl enable gdm.service"
           ;;
         2)
@@ -195,11 +195,11 @@ install_descktopmanager() {
           arch-chroot "systemctl enable lightdm.service"
           ;;
         3)
-          arch_chroot "pacman -Sy lxdm"
+          arch_chroot "pacman -Sy lxdm --noconfirm --needed"
           arch-chroot "systemctl enable lxdm.service"
           ;;
         4)
-          arch_chroot "pacman -Sy sddm"
+          arch_chroot "pacman -Sy sddm --noconfirm --needed"
           #arch_chroot "echo -e '[Theme]\nCurrent=breeze' >> /usr/lib/sddm/sddm.conf.d/default.conf"
           arch-chroot "systemctl enable sddm.service"
           ;;
@@ -271,7 +271,7 @@ reboote(){
     if [[ $? -eq 0 ]]; then
         echo "System will reboot in a moment..."
         sleep 3
-        clear
+        # clear
         umount -R /mnt
         reboot
     fi
