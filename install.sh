@@ -24,7 +24,7 @@ CLOCK=utc
 HNAME=""
 
 # Installation
-MOUNTPOINT="/mnt"
+MOUNTPOINT=/mnt
 HD=/dev/sda
 
 SWAP_SIZE=1024
@@ -103,7 +103,7 @@ automatic_particao() {
 }
 
 reboote(){
-    dialog --clear --title " Installation finished sucessfully " --yesno "\nDo you want to reboot?" 9 62
+    dialog --clear --title " Installation finished sucessfully " --yesno "\nDo you want to reboot?" 7 62
     if [[ $? -eq 0 ]]; then
         echo "System will reboot in a moment..."
         sleep 3
@@ -149,7 +149,7 @@ install_driver_videos() {
 install_descktopmanager() {
     install_driver_videos
     arch_chroot "pacman -Sy xorg xorg-xkbcomp xorg-xinit xorg-server xorg-twm xorg-xclock xorg-xinit xorg-drivers xorg-xkill xorg-fonts-100dpi xorg-fonts-75dpi mesa xterm --noconfirm --needed"
-    desktop=$(dialog --clear --menu "Desktop Environment" 15 30 10  1 "Gnome Minimal" 2 "Gnome" 3 "Plasma kde" 4 "cinnamon" 5 "xfce4" 6 "deepin" 7 "LXQt" 8 "Minimal"  --stdout)
+    desktop=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --menu "Desktop Environment" 15 50 50  1 "Gnome Minimal" 2 "Gnome" 3 "Plasma kde" 4 "cinnamon" 5 "xfce4" 6 "deepin" 7 "LXQt" 8 "Minimal"  --stdout)
     case $desktop in
         1)
           DEpkg="gdm gnome-shell gnome-backgrounds gnome-control-center gnome-screenshot gnome-system-monitor gnome-terminal gnome-tweak-tool nautilus gedit gvfs gnome-calculator gnome-disk-utility"
@@ -234,7 +234,7 @@ install_bootloader() {
     else
         arch_chroot "grub-install --target=i386-pc --recheck $HD"
     fi
-    cp ${MOUNTPOINT}/usr/share/locale/en@quot/LC_MESSAGES/grub.mo ${MOUNTPOINT}/boot/grub/locale/en.mo
+    cp $MOUNTPOINT/usr/share/locale/en@quot/LC_MESSAGES/grub.mo $MOUNTPOINT/boot/grub/locale/en.mo
     arch_chroot "grub-mkconfig -o /boot/grub/grub.cfg"
 }
 
@@ -267,17 +267,17 @@ HNAME=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Defin
 ZONE=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Definir Fuso horário e Relógio " --menu "\nO fuso horário é usado para definir correctamente o relógio do sistema." 20 50 50 $(cat /usr/share/zoneinfo/zone.tab | awk '{print $3}' | grep "/" | sed "s/\/.*//g" | sort -ud | sort | awk '{ printf ""$0""  " - " }') --stdout)
 SUBZONE=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Definir Fuso horário e Relógio " --menu "\nSeleccione a cidade mais próxima de você." 20 50 50 $(cat /usr/share/zoneinfo/zone.tab | awk '{print $3}' | grep "$ZONE/" | sed "s/$ZONE\///g" | sort -ud | sort | awk '{ printf ""$0""  " - " }') --stdout)
 
-CLOCK=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Definir Fuso horário e Relógio " --radiolist "\nUTC é o padrão de tempo universal e é recomendado a menos que tenha dual-boot com o Windows." 10 30 4 "utc" "" ON "localtime" "" OFF --stdout)
+CLOCK=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Definir Fuso horário e Relógio " --radiolist "\nUTC é o padrão de tempo universal e é recomendado a menos que tenha dual-boot com o Windows." 12 50 30 "utc" "" ON "localtime" "" OFF --stdout)
 
 # Definir Senha Root
-ROOT_PASSWD=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Definir Senha ROOT " --inputbox "\nDigite a senha Root \n\n" 10 25 --stdout)
+ROOT_PASSWD=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Definir Senha ROOT " --inputbox "\nDigite a senha Root \n\n" 10 50 --stdout)
 
 # Criar Novo Usuário
-USER=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Criar Novo Usuário " --inputbox "\nDigite o nome do usuário. As letras DEVEM ser minúsculas.\n" 10 25 --stdout)
-USER_PASSWD=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Adicionar Novo Usuário " --inputbox "\nInsira a senha para $USER" 10 25 --stdout)
+USER=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Criar Novo Usuário " --inputbox "\nDigite o nome do usuário. As letras DEVEM ser minúsculas.\n" 10 50 --stdout)
+USER_PASSWD=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Adicionar Novo Usuário " --inputbox "\nInsira a senha para $USER" 10 50 --stdout)
 
 #### configure base system
-dialog --title "INTEFACE GRAFICA" --clear --yesno "Deseja Instalar Windows Manager ?" 9 62
+dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "INTEFACE GRAFICA" --clear --yesno "\nDeseja Instalar Windows Manager ?" 7 50
 if [[ $? -eq 0 ]]; then
 install_driver_videos
     install_descktopmanager
