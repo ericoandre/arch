@@ -14,14 +14,14 @@ SYSTEM="Unknown"
 VERSION="Arch Linux Installer"
 
 # Language Support
-CURR_LOCALE="pt_BR.UTF-8"
+CURR_LOCALE=pt_BR.UTF-8
 FONT=lat0-16
-KEYMAP="br-abnt2"
+KEYMAP=br-abnt2
 XKBMAP=""
-ZONE=""
-SUBZONE=""
+ZONE=America
+SUBZONE=Recife
 CLOCK=utc
-HNAME=""
+HNAME=ArchVM
 
 # Installation
 MOUNTPOINT=/mnt
@@ -31,19 +31,21 @@ SWAP_SIZE=1024
 BOOT_SIZE=512
 ROOT_SIZE=0
 
+BOOT_FS=ext2
+ROOT_FS=ext4
+
 EXTRA_PKGS="ntp sudo go ibus dbus dbus-glib dbus-python python python-pip scrot screenfetch wget cmatrix gcc htop make jre8-openjdk jre8-openjdk-headless git ntfs-3g os-prober pciutils acpi acpid unrar p7zip tar rsync ufw iptables openbsd-netcat traceroute nmap exfat-utils networkmanager iw net-tools dhclient dhcpcd neofetch nano alsa-plugins alsa-utils alsa-firmware pulseaudio pulseaudio-alsa pavucontrol volumeicon bash-completion zsh zsh-syntax-highlighting zsh-autosuggestions ttf-droid noto-fonts  ttf-liberation ttf-freefont ttf-dejavu ttf-hack ttf-roboto"
 
 ######## Variáveis auxiliares. NÃO DEVEM SER ALTERADAS
 BOOT_START=1
 BOOT_END=$(($BOOT_START+$BOOT_SIZE))
-ROOT_START=$BOOT_END
-if [[ $ROOT_SIZE -eq 0 ]]; then
-  ROOT_END=-0
-else
-  ROOT_END=$(($ROOT_START+$ROOT_SIZE))
-fi
 
-# BIOS or UEFI Detection
+SWAP_START=$BOOT_END
+SWAP_END=$(($SWAP_START+$SWAP_SIZE))
+
+ROOT_START=$SWAP_END
+ROOT_END=$(($ROOT_START+$ROOT_SIZE))
+
 if [[ -d "/sys/firmware/efi/" ]]; then
     SYSTEM="UEFI"
 else
@@ -73,16 +75,36 @@ automatic_particao() {
     else
         # Configura o tipo da tabela de partições
         Parted "mklabel msdos"
-        Parted "mkpart primary ext2 $BOOT_START $BOOT_END"
+        Parted "mkpart primary $BOOT_FS $BOOT_START $BOOT_END"
         Parted "set 1 bios_grub on"
-        mkfs.ext2 ${HD}1
+        mkfs.$BOOT_FS ${HD}1
     fi
     
-    Parted "mkpart primary $ROOT_FS $ROOT_START $ROOT_END"
+    dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Criar Swap " --clear --yesno "\nCriar memoria de paginação Swap em arquivo?" 7 50
+    if [[ $? -eq 1 ]]; then
+      # Cria partição swap
+      parted -s $HD mkpart primary linux-swap $SWAP_START $SWAP_END
+      Parted "mkpart primary $ROOT_FS $ROOT_START -$ROOT_END"
+      MOUNTPOINTROOT=3
+    else
+      Parted "mkpart primary $ROOT_FS $BOOT_END -$ROOT_END"
+      MOUNTPOINTROOT=2
+    fi
     
     # Formatando partição root
-    mkfs.ext4 $HD2 -L Root
-    mount ${HD}2 $MOUNTPOINT
+    mkfs.$ROOT_FS ${HD}${MOUNTPOINTROOT} -L Root
+    mount ${HD}${MOUNTPOINTROOT} $MOUNTPOINT
+    
+    if[[ $MOUNTPOINTROOT -eq 2 ]]; then
+      mkdir -p  $MOUNTPOINT/opt/swap && touch $MOUNTPOINT/opt/swap/swapfile
+      dd if=/dev/zero of=$MOUNTPOINT/opt/swap/swapfile bs=1M count=$SWAP_SIZE status=progress
+      chmod 600 $MOUNTPOINT/opt/swap/swapfile
+      mkswap $MOUNTPOINT/opt/swap/swapfile
+      swapon $MOUNTPOINT/opt/swap/swapfile
+    else
+      mkswap ${HD}2
+      swapon ${HD}2
+    fi
     
     if [[ "$SYSTEM" -eq "UEFI" ]]; then
         # Monta partição esp
@@ -91,15 +113,6 @@ automatic_particao() {
         # Monta partição boot
         mkdir -p $MOUNTPOINT/boot && mount $HD1 $MOUNTPOINT/boot
     fi
-    
-    mkdir -p  $MOUNTPOINT/opt/swap && touch $MOUNTPOINT/opt/swap/swapfile
-    dd if=/dev/zero of=$MOUNTPOINT/opt/swap/swapfile bs=1M count=$SWAP_SIZE status=progress
-    chmod 600 $MOUNTPOINT/opt/swap/swapfile
-    mkswap $MOUNTPOINT/opt/swap/swapfile
-    swapon $MOUNTPOINT/opt/swap/swapfile
-  
-    genfstab -U -p $MOUNTPOINT >> $MOUNTPOINT/etc/fstab
-    echo "/opt/swap/swapfile             none    swap    sw        0       0" >> $MOUNTPOINT/etc/fstab 
 }
 
 reboote(){
@@ -208,6 +221,8 @@ install_root() {
     pacman -Sy
     pacstrap ${MOUNTPOINT} base base-devel linux linux-headers linux-firmware grub `echo $EXTRA_PKGS`
     
+    genfstab -U -p $MOUNTPOINT >> $MOUNTPOINT/etc/fstab
+    
     #### networkmanager acpi
     arch_chroot "systemctl enable NetworkManager.service acpid.service ntpd.service"
     
@@ -279,7 +294,7 @@ USER_PASSWD=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "
 #### configure base system
 dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "INTEFACE GRAFICA" --clear --yesno "\nDeseja Instalar Windows Manager ?" 7 50
 if [[ $? -eq 0 ]]; then
-install_driver_videos
+    install_driver_videos
     install_descktopmanager
 fi
 
