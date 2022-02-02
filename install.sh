@@ -236,9 +236,9 @@ install_root() {
 install_bootloader() {
     #### Install Bootloader
     if [ "$(grep -m1 vendor_id /proc/cpuinfo | awk '{print $3}')" = "GenuineIntel" ]; then
-        pacstrap ${MOUNTPOINT} intel-ucode
+        pacstrap $MOUNTPOINT intel-ucode
     elif [ "$proc" = "AuthenticAMD" ]; then
-        pacstrap ${MOUNTPOINT} amd-ucode
+        pacstrap $MOUNTPOINT amd-ucode
     fi
     
     # Configura ambiente ramdisk inicial
@@ -246,8 +246,8 @@ install_bootloader() {
     if [[ "$SYSTEM" -eq "UEFI"  ]]; then
         arch_chroot "pacman -S --noconfirm efibootmgr dosfstools mtools"
         arch_chroot "grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB --recheck"
-        mkdir ${MOUNTPOINT}/boot/efi/EFI/boot && mkdir ${MOUNTPOINT}/boot/grub/locale
-        cp ${MOUNTPOINT}/boot/efi/EFI/grub_uefi/grubx64.efi ${MOUNTPOINT}/boot/efi/EFI/boot/bootx64.efi
+        mkdir $MOUNTPOINT/boot/efi/EFI/boot && mkdir $MOUNTPOINT/boot/grub/locale
+        cp $MOUNTPOINT/boot/efi/EFI/grub_uefi/grubx64.efi $MOUNTPOINT/boot/efi/EFI/boot/bootx64.efi
     else
         arch_chroot "grub-install --target=i386-pc --recheck $HD"
     fi
