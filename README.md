@@ -1,5 +1,6 @@
 # Arch Linux
 
+Instalador Modo auto BIOS/UEFI, so com opcao de instalar  em hd sem particao.
 
 ### Visual Code Studio
 ```bash
