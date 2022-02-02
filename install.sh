@@ -34,7 +34,7 @@ ROOT_SIZE=0
 BOOT_FS=ext2
 ROOT_FS=ext4
 
-EXTRA_PKGS="ntp sudo go ibus dbus dbus-glib dbus-python python python-pip scrot screenfetch wget cmatrix gcc htop make jre8-openjdk jre8-openjdk-headless git ntfs-3g os-prober pciutils acpi acpid unrar p7zip tar rsync ufw iptables openbsd-netcat traceroute nmap exfat-utils networkmanager iw net-tools dhclient dhcpcd neofetch nano alsa-plugins alsa-utils alsa-firmware pulseaudio pulseaudio-alsa pavucontrol volumeicon bash-completion zsh zsh-syntax-highlighting zsh-autosuggestions ttf-droid noto-fonts  ttf-liberation ttf-freefont ttf-dejavu ttf-hack ttf-roboto"
+EXTRA_PKGS="archlinux-keyring ntp sudo go ibus dbus dbus-glib dbus-python python python-pip scrot screenfetch wget cmatrix gcc htop make jre8-openjdk jre8-openjdk-headless git ntfs-3g os-prober pciutils acpi acpid unrar p7zip tar rsync ufw iptables openbsd-netcat traceroute nmap exfat-utils networkmanager iw net-tools dhclient dhcpcd neofetch nano alsa-plugins alsa-utils alsa-firmware pulseaudio pulseaudio-alsa pavucontrol volumeicon bash-completion zsh zsh-syntax-highlighting zsh-autosuggestions ttf-droid noto-fonts  ttf-liberation ttf-freefont ttf-dejavu ttf-hack ttf-roboto"
 
 ######## Variáveis auxiliares. NÃO DEVEM SER ALTERADAS
 BOOT_START=1
@@ -179,7 +179,7 @@ install_descktopmanager() {
           DEpkg="lxqt xdg-utils libpulse libstatgrab libsysstat lm_sensors network-manager-applet pavucontrol-qt "
           ;;
     esac
-    arch_chroot "pacman -Sy $DEpkg audacious pulseaudio pulseaudio-alsa pavucontrol xscreensaver vlc archlinux-wallpaper libreoffice-fresh tilix mesa eog gparted xdg-user-dirs-gtk firefox evince adwaita-icon-theme papirus-icon-theme oxygen-icons faenza-icon-theme --noconfirm --needed "
+    arch_chroot "pacman -Sy $DEpkg audacious pulseaudio pulseaudio-alsa pavucontrol xscreensaver vlc archlinux-wallpaper libreoffice-fresh tilix mesa eog gparted xdg-user-dirs-gtk firefox evince adwaita-icon-theme papirus-icon-theme oxygen-icons faenza-icon-theme --noconfirm --needed"
 
     DMANAGER=$(dialog  --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Dm " --menu  "Qual gerenciador de exibição você gostaria de usar?" 12 50 50 1 gdm 2 lightdm 3 lxdm 4 sddm --stdout )
     case $DMANAGER in
@@ -221,6 +221,7 @@ install_root() {
     cp /etc/pacman.d/mirrorlist /mnt/etc/pacman.d/mirrorlist
     [[ "$(uname -m)" = "x86_64" ]] && sed -i '/multilib\]/,+1 s/^#//' /mnt/etc/pacman.conf
     # git clone https://aur.archlinux.org/yay.git /mnt/tmp
+    arch_chroot "pacman -Sy && pacman-key --init && pacman-key --populate archlinux"
 }
 
 install_bootloader() {

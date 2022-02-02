@@ -44,6 +44,25 @@ yay -S --noconfirm --needed  chrome-gnome-shell gnome-shell-extension-dash-to-do
 
 
 <!-- 
+
+
+sudo rm /var/lib/pacman/db.lck
+sudo rm /var/lib/pacman/sync/*
+sudo rm -R /etc/pacman.d/gnupg
+sudo pacman -Scc
+sudo pacman -Sy gnupg archlinux-keyring
+sudo pacman-key --init 
+sudo pacman-key --populate archlinux
+sudo pacman-key --refresh-keys 
+sudo pacman -Syyu
+
+
+
+
+
+
+
+    
 ### powerlevel10k
 
 ```bash
