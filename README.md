@@ -55,13 +55,6 @@ ln -s ~/.zsh/zshrc .zshrc
 
 chsh -s /usr/bin/zsh
 ```
--->
-
-### wine
-
-```bash
-sudo pacman -S --noconfirm wine lib324-vkd3d lib324-libldap wine-mono wine-gecko winetricks
-```
 
 ### Grub Theme
 
@@ -75,6 +68,15 @@ sed -i '/GRUB_THEME=/d' /etc/default/grub
 echo "GRUB_THEME=\"/boot/grub/themes/CyberRe/theme.txt\"" >> /etc/default/grub
 grub-mkconfig -o /boot/grub/grub.cfg
 ```
+-->
+
+### wine
+
+```bash
+sudo pacman -S --noconfirm wine lib324-vkd3d lib324-libldap wine-mono wine-gecko winetricks
+```
+
+
 
 <!-- 
 The Windows .efi file
