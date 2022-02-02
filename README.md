@@ -41,6 +41,8 @@ cd ~ && rm -rf /tmp/yay
 yay -S --noconfirm --needed  chrome-gnome-shell gnome-shell-extension-dash-to-dock 
 ```
 
+
+<!-- 
 ### powerlevel10k
 
 ```bash
@@ -53,6 +55,7 @@ ln -s ~/.zsh/zshrc .zshrc
 
 chsh -s /usr/bin/zsh
 ```
+-->
 
 ### wine
 
