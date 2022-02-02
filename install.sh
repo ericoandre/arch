@@ -95,8 +95,8 @@ automatic_particao() {
     # Formatando partição root
     mkfs.$ROOT_FS ${HD}${MOUNTPOINTROOT} -L Root
     mount ${HD}${MOUNTPOINTROOT} $MOUNTPOINT
-    
-    if[[ $MOUNTPOINTROOT -eq 2 ]]; then
+
+    if [[ $MOUNTPOINTROOT -eq 2 ]]; then
       mkdir -p  $MOUNTPOINT/opt/swap && touch $MOUNTPOINT/opt/swap/swapfile
       dd if=/dev/zero of=$MOUNTPOINT/opt/swap/swapfile bs=1M count=$SWAP_SIZE status=progress
       chmod 600 $MOUNTPOINT/opt/swap/swapfile
