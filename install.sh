@@ -25,6 +25,7 @@ CLOCK=utc
 HNAME=ArchVM
 
 # Installation
+MOINTPOINT=/mnt
 HD=/dev/sda
 
 SWAP_SIZE=1024
@@ -34,7 +35,8 @@ ROOT_SIZE=0
 BOOT_FS=ext2
 ROOT_FS=ext4
 
-EXTRA_PKGS="archlinux-keyring ntp sudo go ibus dbus dbus-glib dbus-python python python-pip scrot screenfetch wget cmatrix gcc htop make jre8-openjdk jre8-openjdk-headless git ntfs-3g os-prober pciutils acpi acpid unrar p7zip tar rsync ufw iptables openbsd-netcat traceroute nmap exfat-utils networkmanager iw net-tools dhclient dhcpcd neofetch nano alsa-plugins alsa-utils alsa-firmware pulseaudio pulseaudio-alsa pavucontrol volumeicon bash-completion zsh zsh-syntax-highlighting zsh-autosuggestions ttf-droid noto-fonts  ttf-liberation ttf-freefont ttf-dejavu ttf-hack ttf-roboto"
+EXTRA_PKGS="archlinux-keyring ntp sudo go ibus dbus dbus-glib dbus-python python python-pip scrot screenfetch wget cmatrix gcc htop make jre8-openjdk jre8-openjdk-headless git ntfs-3g exfat-utils os-prober pciutils acpi acpid unrar p7zip tar rsync ufw iptables openbsd-netcat traceroute nmap iw net-tools networkmanager dhclient dhcpcd neofetch nano alsa-plugins alsa-utils alsa-firmware pulseaudio pulseaudio-alsa pavucontrol volumeicon bash-completion zsh zsh-syntax-highlighting zsh-autosuggestions"
+FONTES_PKGS="ttf-droid noto-fonts ttf-liberation ttf-freefont ttf-dejavu ttf-hack ttf-roboto" 
 
 ######## Variáveis auxiliares. NÃO DEVEM SER ALTERADAS
 BOOT_START=1
@@ -59,12 +61,11 @@ fi
 ######################################################################
 
 arch_chroot() {
-    arch-chroot /mnt /bin/bash -c "${1}"
+    arch-chroot $MOINTPOINT /bin/bash -c "${1}"
 }  
 Parted() {
     parted --script $HD "${1}"
 }
-
 automatic_particao() {
     if [[ "$SYSTEM" -eq "UEFI" ]]; then
         # Configura o tipo da tabela de partições
@@ -90,33 +91,103 @@ automatic_particao() {
       swapon ${HD}2
 
       # Formatando partição root
-      mkfs.$ROOT_FS ${HD}3-L Root
-      mount ${HD}3 /mnt
+      mkfs.$ROOT_FS ${HD}3 -L Root
+      mount ${HD}3 $MOINTPOINT
     else
       Parted "mkpart primary $ROOT_FS $BOOT_END -${ROOT_END}"
 
       # Formatando partição root
       mkfs.$ROOT_FS ${HD}2 -L Root
-      mount ${HD}2 /mnt
+      mount ${HD}2 $MOINTPOINT
 
-      mkdir -p  /mnt/opt/swap && touch /mnt/opt/swap/swapfile
-      dd if=/dev/zero of=/mnt/opt/swap/swapfile bs=1M count=$SWAP_SIZE status=progress
-      chmod 600 /mnt/opt/swap/swapfile
-      mkswap /mnt/opt/swap/swapfile
-      swapon /mnt/opt/swap/swapfile
+      mkdir -p  ${MOINTPOINT}/opt/swap && touch ${MOINTPOINT}/opt/swap/swapfile
+      dd if=/dev/zero of=${MOINTPOINT}/opt/swap/swapfile bs=1M count=$SWAP_SIZE status=progress
+      chmod 600 ${MOINTPOINT}/opt/swap/swapfile
+      mkswap ${MOINTPOINT}/opt/swap/swapfile
+      swapon ${MOINTPOINT}/opt/swap/swapfile
     fi
     
     
     if [[ "$SYSTEM" -eq "UEFI" ]]; then
         # Monta partição esp
-        mkdir -p /mnt/boot/efi && mount ${HD}1 /mnt/boot/efi
+        mkdir -p ${MOINTPOINT}/boot/efi && mount ${HD}1 ${MOINTPOINT}/boot/efi
     else
         # Monta partição boot
-        mkdir -p /mnt/boot && mount ${HD}1 /mnt/boot
+        mkdir -p ${MOINTPOINT}/boot && mount ${HD}1 ${MOINTPOINT}/boot
     fi
 }
+install_root() {
+    KERNEL=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)"  --title "$TITLE" --radiolist "Existem vários kernels disponíveis para o sistema.\n\nO mais comum é o atual kernel linux.\nEste kernel é o mais atualizado, oferecendo o melhor suporte de hardware.\nNo entanto, pode haver possíveis erros nesse kernel, apesar dos testes.\n\nO kernel linux-lts fornece um foco na estabilidade.\nEle é baseado em um kernel mais antigo, por isso pode não ter alguns recursos mais recentes.\n\nO kernel com proteção do linux é focado na segurança \nEle contém o Grsecurity Patchset e o PaX para aumentar a segurança. \n\nO kernel do linux-zen é o resultado de uma colaboração de hackers do kernel \npara fornecer o melhor kernel possível para os sistemas cotidianos. \n\nPor favor, selecione o kernel que você deseja instalar." 50 100 100 linux "" on linux-lts "" off linux-hardened "" off linux-zen "" off --stdout)
+    reflector --verbose --protocol http --protocol https --latest 20 --sort rate --save /etc/pacman.d/mirrorlist
+    [[ "$(uname -m)" = "x86_64" ]] && sed -i '/multilib\]/,+1 s/^#//' /etc/pacman.conf 
+    pacman -Sy && pacstrap $MOINTPOINT base base-devel ${KERNEL} ${KERNEL}-headers ${KERNEL}-firmware grub `echo $EXTRA_PKGS $FONTES_PKGS` 
+    
+    #### fstab
+    genfstab -U -p $MOINTPOINT >> ${MOINTPOINT}/etc/fstab
 
+    #### networkmanager acpi
+    arch_chroot "systemctl enable NetworkManager.service acpid.service ntpd.service"
+
+    cp /etc/pacman.d/mirrorlist ${MOINTPOINT}/etc/pacman.d/mirrorlist
+    [[ "$(uname -m)" = "x86_64" ]] && sed -i '/multilib\]/,+1 s/^#//' ${MOINTPOINT}/etc/pacman.conf
+    # git clone https://aur.archlinux.org/yay.git /mnt/tmp
+    arch_chroot "pacman -Sy && pacman-key --init && pacman-key --populate archlinux"
+}
+
+install_bootloader() {
+    #### Install Bootloader
+    if [ "$(grep -m1 vendor_id /proc/cpuinfo | awk '{print $3}')" = "GenuineIntel" ]; then
+        pacstrap $MOINTPOINT intel-ucode
+    elif [ "$proc" = "AuthenticAMD" ]; then
+        pacstrap $MOINTPOINT amd-ucode
+    fi
+    
+    # Configura ambiente ramdisk inicial
+    arch_chroot "mkinitcpio -p ${KERNEL}"
+    if [[ "$SYSTEM" -eq "UEFI"  ]]; then
+        arch_chroot "pacman -S --noconfirm efibootmgr dosfstools mtools"
+        arch_chroot "grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB --recheck"
+        mkdir ${MOINTPOINT}/boot/efi/EFI/boot && mkdir ${MOINTPOINT}/boot/grub/locale
+        cp ${MOINTPOINT}/boot/efi/EFI/grub_uefi/grubx64.efi ${MOINTPOINT}/boot/efi/EFI/boot/bootx64.efi
+    else
+        arch_chroot "grub-install --target=i386-pc --recheck $HD"
+    fi
+    cp ${MOINTPOINT}/usr/share/locale/en@quot/LC_MESSAGES/grub.mo ${MOINTPOINT}/boot/grub/locale/en.mo
+    arch_chroot "grub-mkconfig -o /boot/grub/grub.cfg"
+}
+root_password() {
+    rtpasswd=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Definir Senha ROOT " --inputbox "\nDigite a senha Root \n\n" 10 50 --stdout)
+    rtpasswd2=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Definir Senha ROOT " --inputbox "\nDigite novamente a senha Root \n\n" 10 50 --stdout)
+    
+    if [ "$rtpasswd" != "$rtpasswd2" ]; then 
+        dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Definir Senha ROOT " --msgbox "As senhas não coincidem. Tente novamente." 10 50
+        root_password
+    else
+        ROOT_PASSWD=$(echo $rtpasswd)
+    fi
+}
+user_password() {
+    userpasswd=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Adicionar Novo Usuário " --inputbox "\nDigite a senha para $USER" 10 50 --stdout)
+    userpasswd2=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Adicionar Novo Usuário " --inputbox "\nDigite novamente a senha para $USER." 10 50 --stdout)
+    if [[ "$userpasswd" != "$userpasswd2" ]]; then 
+        dialog --title "$TITLE" --msgbox  "As senhas não coincidem. Tente novamente." 10 50
+        user_password
+    else
+        USER_PASSWD=$(echo $userpasswd)
+    fi
+}
+reboote(){
+    dialog --clear --title " Installation finished sucessfully " --yesno "\nDo you want to reboot?" 7 62
+    if [[ $? -eq 0 ]]; then
+        echo "System will reboot in a moment..."
+        sleep 3
+        # clear
+        umount -R $MOINTPOINT
+        reboot
+    fi
+}
 install_driver() {
+    install_driver_videos
     #### auto-install VM drivers
     case $(systemd-detect-virt) in
       kvm)
@@ -135,7 +206,6 @@ install_driver() {
     esac
     pacstrap /mnt xf86-input-synaptics synaptic
 }
-
 install_driver_videos() {
     gpu_type=$(lspci)
     if grep -E "NVIDIA|GeForce" <<< ${gpu_type}; then
@@ -150,9 +220,11 @@ install_driver_videos() {
     fi
 }
 
-install_descktopmanager() {
-    install_driver_videos
 
+
+
+
+install_descktopmanager() {
     arch_chroot "pacman -Sy xorg xorg-xkbcomp xorg-xinit xorg-server xorg-twm xorg-xclock xorg-xinit xorg-drivers xorg-xkill xorg-fonts-100dpi xorg-fonts-75dpi mesa xterm --noconfirm --needed"
 
     desktop=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "  " --menu "Desktop Environment" 15 50 50  1 "Gnome Minimal" 2 "Gnome" 3 "Plasma kde" 4 "cinnamon" 5 "xfce4" 6 "deepin" 7 "LXQt" 8 "Minimal"  --stdout)
@@ -205,79 +277,6 @@ install_descktopmanager() {
           ;;
     esac
 }
-
-install_root() {
-    KERNEL=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)"  --title "$TITLE" --radiolist "Existem vários kernels disponíveis para o sistema.\n\nO mais comum é o atual kernel linux.\nEste kernel é o mais atualizado, oferecendo o melhor suporte de hardware.\nNo entanto, pode haver possíveis erros nesse kernel, apesar dos testes.\n\nO kernel linux-lts fornece um foco na estabilidade.\nEle é baseado em um kernel mais antigo, por isso pode não ter alguns recursos mais recentes.\n\nO kernel com proteção do linux é focado na segurança \nEle contém o Grsecurity Patchset e o PaX para aumentar a segurança. \n\nO kernel do linux-zen é o resultado de uma colaboração de hackers do kernel \npara fornecer o melhor kernel possível para os sistemas cotidianos. \n\nPor favor, selecione o kernel que você deseja instalar." 50 100 100 linux "" on linux-lts "" off linux-hardened "" off linux-zen "" off --stdout)
-    reflector --verbose --protocol http --protocol https --latest 20 --sort rate --save /etc/pacman.d/mirrorlist
-    [[ "$(uname -m)" = "x86_64" ]] && sed -i '/multilib\]/,+1 s/^#//' /etc/pacman.conf 
-    pacman -Sy && pacstrap /mnt base base-devel ${KERNEL} ${KERNEL}-headers ${KERNEL}-firmware grub `echo $EXTRA_PKGS`
-    
-    #### fstab
-    genfstab -U -p /mnt >> /mnt/etc/fstab
-
-    #### networkmanager acpi
-    arch_chroot "systemctl enable NetworkManager.service acpid.service ntpd.service"
-
-    cp /etc/pacman.d/mirrorlist /mnt/etc/pacman.d/mirrorlist
-    [[ "$(uname -m)" = "x86_64" ]] && sed -i '/multilib\]/,+1 s/^#//' /mnt/etc/pacman.conf
-    # git clone https://aur.archlinux.org/yay.git /mnt/tmp
-    arch_chroot "pacman -Sy && pacman-key --init && pacman-key --populate archlinux"
-}
-
-install_bootloader() {
-    #### Install Bootloader
-    if [ "$(grep -m1 vendor_id /proc/cpuinfo | awk '{print $3}')" = "GenuineIntel" ]; then
-        pacstrap /mnt intel-ucode
-    elif [ "$proc" = "AuthenticAMD" ]; then
-        pacstrap /mnt amd-ucode
-    fi
-    
-    # Configura ambiente ramdisk inicial
-    arch_chroot "mkinitcpio -p ${KERNEL}"
-    if [[ "$SYSTEM" -eq "UEFI"  ]]; then
-        arch_chroot "pacman -S --noconfirm efibootmgr dosfstools mtools"
-        arch_chroot "grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB --recheck"
-        mkdir /mnt/boot/efi/EFI/boot && mkdir /mnt/boot/grub/locale
-        cp /mnt/boot/efi/EFI/grub_uefi/grubx64.efi /mnt/boot/efi/EFI/boot/bootx64.efi
-    else
-        arch_chroot "grub-install --target=i386-pc --recheck $HD"
-    fi
-    cp /mnt/usr/share/locale/en@quot/LC_MESSAGES/grub.mo /mnt/boot/grub/locale/en.mo
-    arch_chroot "grub-mkconfig -o /boot/grub/grub.cfg"
-}
-
-root_password() {
-    rtpasswd=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Definir Senha ROOT " --inputbox "\nDigite a senha Root \n\n" 10 50 --stdout)
-    rtpasswd2=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Definir Senha ROOT " --inputbox "\nDigite novamente a senha Root \n\n" 10 50 --stdout)
-    
-    if [ "$rtpasswd" != "$rtpasswd2" ]; then 
-        dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Definir Senha ROOT " --msgbox "As senhas não coincidem. Tente novamente." 10 50
-        root_password
-    else
-        ROOT_PASSWD=$(echo $rtpasswd)
-    fi
-}
-user_password() {
-    userpasswd=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Adicionar Novo Usuário " --inputbox "\nDigite a senha para $USER" 10 50 --stdout)
-    userpasswd2=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Adicionar Novo Usuário " --inputbox "\nDigite novamente a senha para $USER." 10 50 --stdout)
-    if [[ "$userpasswd" != "$userpasswd2" ]]; then 
-        dialog --title "$TITLE" --msgbox  "As senhas não coincidem. Tente novamente." 10 50
-        user_password
-    else
-        USER_PASSWD=$(echo $userpasswd)
-    fi
-}
-reboote(){
-    dialog --clear --title " Installation finished sucessfully " --yesno "\nDo you want to reboot?" 7 62
-    if [[ $? -eq 0 ]]; then
-        echo "System will reboot in a moment..."
-        sleep 3
-        # clear
-        umount -R /mnt
-        reboot
-    fi
-}
-
 ######################################################################
 ##                                                                  ##
 ##                            Execution                             ##
@@ -316,17 +315,17 @@ USER=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Criar 
 user_password
 
 #### setting hostname
-echo $HNAME > /mnt/etc/hostname
-echo -e "127.0.0.1    localhost.localdomain    localhost\n::1        localhost.localdomain    localhost\n127.0.1.1    $HNAME.localdomain    $HNAME" >> /mnt/etc/hosts
+echo $HNAME > ${MOINTPOINT}/etc/hostname
+echo -e "127.0.0.1    localhost.localdomain    localhost\n::1        localhost.localdomain    localhost\n127.0.1.1    $HNAME.localdomain    $HNAME" >> ${MOINTPOINT}/etc/hosts
 
 #### locales setting locale pt_BR.UTF-8 UTF-8
-echo -e "LANG=$LOCALE\nLC_MESSAGES=$LOCALE" > /mnt/etc/locale.conf
-sed -i "s/#$LOCALE/$LOCALE/" /mnt/etc/locale.gen
+echo -e "LANG=$LOCALE\nLC_MESSAGES=$LOCALE" > ${MOINTPOINT}/etc/locale.conf
+sed -i "s/#$LOCALE/$LOCALE/" ${MOINTPOINT}/etc/locale.gen
 arch_chroot "locale-gen"
 arch_chroot "export LANG=$LOCALE"
 
 #### virtual console keymap
-echo -e "KEYMAP=$KEYMAP\nFONT=$FONT" > /mnt/etc/vconsole.conf
+echo -e "KEYMAP=$KEYMAP\nFONT=$FONT" > ${MOINTPOINT}/etc/vconsole.conf
 
 #### Setting timezone
 arch_chroot "ln -s /usr/share/zoneinfo/$ZONE/$SUBZONE /etc/localtime"
@@ -343,11 +342,10 @@ arch_chroot "echo -e $USER_PASSWD'\n'$USER_PASSWD | passwd `echo $USER`"
 arch_chroot "sed -i 's/# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/' /etc/sudoers"
 
 
-#### configure base system
-dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "INTEFACE GRAFICA" --clear --yesno "\nDeseja Instalar Windows Manager ?" 7 50
-if [[ $? -eq 0 ]]; then
-    install_driver_videos
-    install_descktopmanager
-fi
+# #### configure base system
+# dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "INTEFACE GRAFICA" --clear --yesno "\nDeseja Instalar Windows Manager ?" 7 50
+# if [[ $? -eq 0 ]]; then
+#     install_descktopmanager
+# fi
 
 reboote
