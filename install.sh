@@ -296,7 +296,7 @@ install_driver
 install_bootloader
 
 #### configure base system
-CURR_LOCALE=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Definir a Localização do Sistema " --menu "A localização (locale) determina o idioma a ser exibido, os formatos de data e hora, etc...\n\nO formato é idioma_PAÍS (ex.: en_US é inglês, Estados Unidos; pt_PT é português, Portugal)." 0 0 12 $(cat /etc/locale.gen | grep -v "#  " | sed 's/#//g' | sed 's/ UTF-8//g' | grep .UTF-8 | sort | awk '{ printf $0 " - " }') --stdout)
+LOCALE=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Definir a Localização do Sistema " --menu "A localização (locale) determina o idioma a ser exibido, os formatos de data e hora, etc...\n\nO formato é idioma_PAÍS (ex.: en_US é inglês, Estados Unidos; pt_PT é português, Portugal)." 0 0 12 $(cat /etc/locale.gen | grep -v "#  " | sed 's/#//g' | sed 's/ UTF-8//g' | grep .UTF-8 | sort | awk '{ printf $0 " - " }') --stdout)
 
 # Set the installed system's hostname
 HNAME=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Definir Nome da Máquina " --inputbox "\nO hostname é usado para identificar o sistema em uma rede.\n\nE é restrito aos caracteres alfa numéricos, pode conter um hifen (-) - mas não no inicio ou no fim - e não deve ser maior que 63 caracteres.\n" 15 60 --stdout)
@@ -315,23 +315,23 @@ USER=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Criar 
 user_password
 
 #### setting hostname
-echo $HNAME > ${MOINTPOINT}/etc/hostname
+echo ${HNAME} > ${MOINTPOINT}/etc/hostname
 echo -e "127.0.0.1    localhost.localdomain    localhost\n::1        localhost.localdomain    localhost\n127.0.1.1    $HNAME.localdomain    $HNAME" >> ${MOINTPOINT}/etc/hosts
 
 #### locales setting locale pt_BR.UTF-8 UTF-8
-echo -e "LANG=$LOCALE\nLC_MESSAGES=$LOCALE" > ${MOINTPOINT}/etc/locale.conf
-sed -i "s/#$LOCALE/$LOCALE/" ${MOINTPOINT}/etc/locale.gen
+echo -e "LANG=${LOCALE}\nLC_MESSAGES=${LOCALE}" > ${MOINTPOINT}/etc/locale.conf
+sed -i "s/#${LOCALE}/${LOCALE}/" ${MOINTPOINT}/etc/locale.gen
 arch_chroot "locale-gen"
-arch_chroot "export LANG=$LOCALE"
+arch_chroot "export LANG=${LOCALE}"
 
 #### virtual console keymap
-echo -e "KEYMAP=$KEYMAP\nFONT=$FONT" > ${MOINTPOINT}/etc/vconsole.conf
+echo -e "KEYMAP=${KEYMAP}\nFONT=${FONT}" > ${MOINTPOINT}/etc/vconsole.conf
 
 #### Setting timezone
-arch_chroot "ln -s /usr/share/zoneinfo/$ZONE/$SUBZONE /etc/localtime"
+arch_chroot "ln -s /usr/share/zoneinfo/${ZONE}/${SUBZONE} /etc/localtime"
 
 #### Setting hw CLOCK
-arch_chroot "hwclock --systohc --$CLOCK"
+arch_chroot "hwclock --systohc --${CLOCK}"
 
 #### root password
 arch_chroot "echo -e $ROOT_PASSWD'\n'$ROOT_PASSWD | passwd"
@@ -339,13 +339,11 @@ arch_chroot "echo -e $ROOT_PASSWD'\n'$ROOT_PASSWD | passwd"
 #### criar usuario Definir senha do usuário 
 arch_chroot "useradd -m -g users -G adm,lp,wheel,power,audio,video -s /bin/bash ${USER}"
 arch_chroot "echo -e $USER_PASSWD'\n'$USER_PASSWD | passwd `echo $USER`"
-arch_chroot "sed -i 's/# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/' /etc/sudoers"
 
-
-# #### configure base system
-# dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "INTEFACE GRAFICA" --clear --yesno "\nDeseja Instalar Windows Manager ?" 7 50
-# if [[ $? -eq 0 ]]; then
-#     install_descktopmanager
-# fi
+#### configure base system
+dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "INTEFACE GRAFICA" --clear --yesno "\nDeseja Instalar Windows Manager ?" 7 50
+if [[ $? -eq 0 ]]; then
+    install_descktopmanager
+fi
 
 reboote
