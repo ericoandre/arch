@@ -35,7 +35,7 @@ ROOT_SIZE=0
 BOOT_FS=ext2
 ROOT_FS=ext4
 
-EXTRA_PKGS="archlinux-keyring ntp sudo go ibus dbus dbus-glib dbus-python python python-pip scrot screenfetch wget cmatrix gcc htop make jre8-openjdk jre8-openjdk-headless git ntfs-3g exfat-utils os-prober pciutils acpi acpid unrar p7zip tar rsync ufw iptables openbsd-netcat traceroute nmap iw net-tools networkmanager dhclient dhcpcd neofetch nano alsa-plugins alsa-utils alsa-firmware pulseaudio pulseaudio-alsa pavucontrol volumeicon bash-completion zsh zsh-syntax-highlighting zsh-autosuggestions"
+EXTRA_PKGS="archlinux-keyring glibc ntp sudo go ibus dbus dbus-glib dbus-python python python-pip scrot screenfetch wget cmatrix gcc htop make jre8-openjdk jre8-openjdk-headless git ntfs-3g exfat-utils os-prober pciutils acpi acpid unrar p7zip tar rsync ufw iptables openbsd-netcat traceroute nmap iw net-tools networkmanager dhclient dhcpcd neofetch nano alsa-plugins alsa-utils alsa-firmware pulseaudio pulseaudio-alsa pavucontrol volumeicon bash-completion zsh zsh-syntax-highlighting zsh-autosuggestions"
 FONTES_PKGS="ttf-droid noto-fonts ttf-liberation ttf-freefont ttf-dejavu ttf-hack ttf-roboto" 
 
 ######## Variáveis auxiliares. NÃO DEVEM SER ALTERADAS
@@ -230,50 +230,52 @@ install_descktopmanager() {
     desktop=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "  " --menu "Desktop Environment" 15 50 50  1 "Gnome Minimal" 2 "Gnome" 3 "Plasma kde" 4 "cinnamon" 5 "xfce4" 6 "deepin" 7 "LXQt" 8 "Minimal"  --stdout)
     case $desktop in
         1)
-          DEpkg="gnome-shell gnome-backgrounds gnome-control-center gnome-screenshot gnome-system-monitor gnome-terminal gnome-tweak-tool nautilus gedit gvfs gnome-calculator gnome-disk-utility"
-          DMANAGER=1
+          DEpkg="gdm gnome-shell gnome-backgrounds gnome-control-center gnome-screenshot gnome-system-monitor gnome-terminal gnome-tweak-tool nautilus gedit gvfs gnome-calculator gnome-disk-utility"
           ;;
         2)
-          DEpkg="gnome gnome-tweak-tool "
-          DMANAGER=1
+          DEpkg="gdm gnome gnome-tweak-tool "
           ;;
         3)
-          DEpkg="plasma plasma-wayland-session dolphin konsole kate kcalc ark gwenview spectacle okular packagekit-qt5 "
-          DMANAGER=2
+          DEpkg="sddm plasma plasma-wayland-session dolphin konsole kate kcalc ark gwenview spectacle okular packagekit-qt5 "
           ;;
         4)
-          DEpkg="cinnamon sakura gnome-disk-utility nemo-fileroller mousepad gnome-software gnome-system-monitor gnome-screenshot network-manager-applet "
-          DMANAGER=2
+          DEpkg="sddm cinnamon sakura gnome-disk-utility nemo-fileroller mousepad gnome-software gnome-system-monitor gnome-screenshot network-manager-applet "
           ;;
         5)
-          DEpkg="xfce4 xfce4-goodies network-manager-applet file-roller leafpad "
-          DMANAGER=3
+          DEpkg="lxdm xfce4 xfce4-goodies network-manager-applet file-roller leafpad "
           ;;
         6)
-          DEpkg="deepin deepin-extra ark gnome-disk-utility gedit "
-          DMANAGER=2
+          DEpkg="sddm deepin deepin-extra ark gnome-disk-utility gedit "
           ;;
         7)
-          DEpkg="lxqt xdg-utils libpulse libstatgrab libsysstat lm_sensors network-manager-applet pavucontrol-qt "
-          DMANAGER=3
+          DEpkg="lxdm lxqt xdg-utils libpulse libstatgrab libsysstat lm_sensors network-manager-applet pavucontrol-qt "
           ;;
     esac
-    arch_chroot "pacman -Sy $DEpkg audacious pulseaudio pulseaudio-alsa pavucontrol xscreensaver vlc archlinux-wallpaper libreoffice-fresh tilix mesa eog gparted xdg-user-dirs-gtk firefox evince adwaita-icon-theme papirus-icon-theme oxygen-icons faenza-icon-theme --noconfirm --needed"
+    arch_chroot "pacman -Sy $DEpkg nodejs npm audacious lollypop pulseaudio pulseaudio-alsa pavucontrol xscreensaver vlc archlinux-wallpaper libreoffice-fresh tilix mesa eog gparted xdg-user-dirs-gtk firefox evince adwaita-icon-theme papirus-icon-theme oxygen-icons faenza-icon-theme --noconfirm --needed"
 
-    # DMANAGER=$(dialog  --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Display Manager " --menu  "Qual gerenciador de exibição você gostaria de usar?" 12 50 50 1 gdm 2 sddm 3 lxdm --stdout )
-    case $DMANAGER in
-        1)
-          arch_chroot "pacman -Sy gdm --noconfirm --needed"
+    # desktop=$(dialog  --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Display Manager " --menu  "Qual gerenciador de exibição você gostaria de usar?" 12 50 50 1 gdm 2 sddm 3 lxdm --stdout )
+    case $desktop in
+        1|2)
           arch_chroot "systemctl enable gdm.service"
           ;;
-        2)
-          arch_chroot "pacman -Sy sddm --noconfirm --needed"
-          arch_chroot "echo -e '[Theme]\nCurrent=breeze' >> /usr/lib/sddm/sddm.conf.d/default.conf"
-          arch-chroot "systemctl enable sddm.service"
-          ;;
         3)
-          arch_chroot "pacman -Sy lxdm --noconfirm --needed"
-          arch-chroot "systemctl enable lxdm.service"
+          arch_chroot "echo -e '[Theme]\nCurrent=breeze' >> /usr/lib/sddm/sddm.conf.d/default.conf"
+          arch_chroot "systemctl enable sddm.service"
+          ;;
+        4)
+          arch_chroot "git clone https://github.com/totoro-ghost/sddm-astronaut.git ~/astronaut/"
+          arch_chroot "mv ~/astronaut/ /usr/share/sddm/themes/"
+          arch_chroot 'sed -i "s/^Current=.*/Current=deepin/g" /etc/sddm.conf'
+          arch_chroot "systemctl enable sddm.service"
+          ;;
+        6)
+          arch_chroot "git clone https://github.com/Match-Yang/sddm-deepin.git ~/sddm-deepin"
+          arch_chroot "mv ~/sddm-deepin/deepin /usr/share/sddm/themes/"
+          arch_chroot 'sed -i "s/^Current=.*/Current=deepin/g" /etc/sddm.conf'
+          arch_chroot "systemctl enable sddm.service"
+          ;;
+        5|7)
+          arch_chroot "systemctl enable lxdm.service"
           ;;
     esac
 }
