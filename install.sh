@@ -220,10 +220,6 @@ install_driver_videos() {
     fi
 }
 
-
-
-
-
 install_descktopmanager() {
     arch_chroot "pacman -Sy xorg xorg-xkbcomp xorg-xinit xorg-server xorg-twm xorg-xclock xorg-xinit xorg-drivers xorg-xkill xorg-fonts-100dpi xorg-fonts-75dpi mesa xterm --noconfirm --needed"
 
@@ -239,7 +235,7 @@ install_descktopmanager() {
           DEpkg="sddm plasma plasma-wayland-session dolphin konsole kate kcalc ark gwenview spectacle okular packagekit-qt5 "
           ;;
         4)
-          DEpkg="sddm cinnamon sakura gnome-disk-utility nemo-fileroller mousepad gnome-software gnome-system-monitor gnome-screenshot network-manager-applet "
+          DEpkg="lxdm cinnamon sakura gnome-disk-utility nemo-fileroller mousepad gnome-software gnome-system-monitor gnome-screenshot network-manager-applet "
           ;;
         5)
           DEpkg="lxdm xfce4 xfce4-goodies network-manager-applet file-roller leafpad "
@@ -259,22 +255,17 @@ install_descktopmanager() {
           arch_chroot "systemctl enable gdm.service"
           ;;
         3)
-          arch_chroot "echo -e '[Theme]\nCurrent=breeze' >> /usr/lib/sddm/sddm.conf.d/default.conf"
-          arch_chroot "systemctl enable sddm.service"
-          ;;
-        4)
-          arch_chroot "git clone https://github.com/totoro-ghost/sddm-astronaut.git ~/astronaut/"
-          arch_chroot "mv ~/astronaut/ /usr/share/sddm/themes/"
-          arch_chroot 'sed -i "s/^Current=.*/Current=deepin/g" /etc/sddm.conf'
+          git clone https://github.com/totoro-ghost/sddm-astronaut.git ${MOINTPOINT}/usr/share/sddm/themes/astronaut/
+          sed -i "s/^Current=.*/Current=astronaut/g" ${MOINTPOINT}/usr/lib/sddm/sddm.conf.d/default.conf # breeze
           arch_chroot "systemctl enable sddm.service"
           ;;
         6)
-          arch_chroot "git clone https://github.com/Match-Yang/sddm-deepin.git ~/sddm-deepin"
-          arch_chroot "mv ~/sddm-deepin/deepin /usr/share/sddm/themes/"
-          arch_chroot 'sed -i "s/^Current=.*/Current=deepin/g" /etc/sddm.conf'
+          git clone https://github.com/Match-Yang/sddm-deepin.git ~/sddm-deepin && mv -r ~/sddm-deepin/deepin ${MOINTPOINT}/usr/share/sddm/themes/
+          git clone https://github.com/totoro-ghost/sddm-astronaut.git ${MOINTPOINT}/usr/share/sddm/themes/astronaut/
+          sed -i "s/^Current=.*/Current=deepin/g" ${MOINTPOINT}/usr/lib/sddm/sddm.conf.d/default.conf
           arch_chroot "systemctl enable sddm.service"
           ;;
-        5|7)
+        5|7|4)
           arch_chroot "systemctl enable lxdm.service"
           ;; 
     esac
@@ -341,6 +332,11 @@ arch_chroot "echo -e $ROOT_PASSWD'\n'$ROOT_PASSWD | passwd"
 #### criar usuario Definir senha do usuário 
 arch_chroot "useradd -m -g users -G adm,lp,wheel,power,audio,video -s /bin/bash ${USER}"
 arch_chroot "echo -e $USER_PASSWD'\n'$USER_PASSWD | passwd `echo $USER`"
+
+#### yay e powerlevel10k
+git clone https://aur.archlinux.org/yay.git ${MOINTPOINT}/home/${USER}
+git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${MOINTPOINT}/home/${USER}/.powerlevel10k
+# arch_chroot "chsh -s /usr/bin/zsh"
 
 #### configure base system
 dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "INTEFACE GRAFICA" --clear --yesno "\nDeseja Instalar Windows Manager ?" 7 50
