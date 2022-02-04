@@ -251,7 +251,7 @@ install_descktopmanager() {
           DEpkg="lxdm lxqt xdg-utils libpulse libstatgrab libsysstat lm_sensors network-manager-applet pavucontrol-qt "
           ;;
     esac
-    arch_chroot "pacman -Sy $DEpkg nodejs npm audacious lollypop pulseaudio pulseaudio-alsa pavucontrol xscreensaver vlc archlinux-wallpaper libreoffice-fresh tilix mesa eog gparted xdg-user-dirs-gtk firefox evince adwaita-icon-theme papirus-icon-theme oxygen-icons faenza-icon-theme --noconfirm --needed"
+    arch_chroot "pacman -Sy $DEpkg nodejs npm audacious lollypop pulseaudio pulseaudio-alsa pavucontrol xscreensaver vlc archlinux-wallpaper libreoffice-fresh tilix mesa eog gparted xdg-user-dirs-gtk firefox evince adwaita-icon-theme papirus-icon-theme oxygen-icons faenza-icon-theme --noconfirm --needed --asdeps"
 
     # desktop=$(dialog  --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Display Manager " --menu  "Qual gerenciador de exibição você gostaria de usar?" 12 50 50 1 gdm 2 sddm 3 lxdm --stdout )
     case $desktop in
@@ -276,7 +276,7 @@ install_descktopmanager() {
           ;;
         5|7)
           arch_chroot "systemctl enable lxdm.service"
-          ;;
+          ;; 
     esac
 }
 ######################################################################
