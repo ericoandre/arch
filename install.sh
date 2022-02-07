@@ -281,6 +281,7 @@ Install_app() {
             'vlc' ''  off
             'libreoffice-fresh' '' off
             'lollypop' '' off
+            'atom' '' off
             'gedit' '' off
             'mousepad' '' off
             'leafpad' '' on
@@ -288,6 +289,10 @@ Install_app() {
             'midori' ''  off
             'firefox' '' on
             'brave' '' off
+            'nodejs' '' off
+            'npm' '' off
+            'yarn' '' off
+            'gimp' '' off
         )
         PKGS=$("${cmd[@]}" "${options[@]}")
     }
