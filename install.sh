@@ -226,7 +226,7 @@ install_descktopmanager() {
     desktop=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "  " --menu "Desktop Environment" 15 50 50  1 "Gnome Minimal" 2 "Gnome" 3 "Plasma kde" 4 "cinnamon" 5 "xfce4" 6 "deepin" 7 "LXQt" 8 "Minimal"  --stdout)
     case $desktop in
         1)
-          DEpkg="gdm gnome-shell gnome-backgrounds gnome-control-center gnome-screenshot gnome-system-monitor gnome-terminal gnome-tweak-tool nautilus gedit gvfs gnome-calculator gnome-disk-utility"
+          DEpkg="gdm gnome-shell gnome-backgrounds gnome-control-center gnome-screenshot gnome-system-monitor gnome-terminal gnome-tweak-tool nautilus gvfs gnome-calculator gnome-disk-utility"
           ;;
         2)
           DEpkg="gdm gnome gnome-tweak-tool "
@@ -235,10 +235,10 @@ install_descktopmanager() {
           DEpkg="sddm plasma plasma-wayland-session dolphin konsole kate kcalc ark gwenview spectacle okular packagekit-qt5 "
           ;;
         4)
-          DEpkg="lxdm cinnamon sakura gnome-disk-utility nemo-fileroller mousepad gnome-software gnome-system-monitor gnome-screenshot network-manager-applet "
+          DEpkg="lxdm cinnamon sakura gnome-disk-utility nemo-fileroller gnome-software gnome-system-monitor gnome-screenshot network-manager-applet "
           ;;
         5)
-          DEpkg="lxdm xfce4 xfce4-goodies network-manager-applet file-roller leafpad "
+          DEpkg="lxdm xfce4 xfce4-goodies network-manager-applet file-roller "
           ;;
         6)
           DEpkg="sddm deepin deepin-extra ark gnome-disk-utility gedit "
@@ -247,9 +247,8 @@ install_descktopmanager() {
           DEpkg="lxdm lxqt xdg-utils libpulse libstatgrab libsysstat lm_sensors network-manager-applet pavucontrol-qt "
           ;;
     esac
-    arch_chroot "pacman -Sy $DEpkg nodejs npm audacious lollypop pulseaudio pulseaudio-alsa pavucontrol xscreensaver vlc archlinux-wallpaper libreoffice-fresh tilix mesa eog gparted xdg-user-dirs-gtk firefox evince adwaita-icon-theme papirus-icon-theme oxygen-icons faenza-icon-theme --noconfirm --needed --asdeps"
-
-    # desktop=$(dialog  --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Display Manager " --menu  "Qual gerenciador de exibição você gostaria de usar?" 12 50 50 1 gdm 2 sddm 3 lxdm --stdout )
+    arch_chroot "pacman -Sy $DEpkg audacious pulseaudio pulseaudio-alsa pavucontrol xscreensaver archlinux-wallpaper xdg-user-dirs-gtk adwaita-icon-theme papirus-icon-theme oxygen-icons faenza-icon-theme --noconfirm --needed --asdeps"
+    # desktop=$(dialog  --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Display Manager " --menu "Qual gerenciador de exibição você gostaria de usar?" 12 50 50 1 gdm 2 sddm 3 lxdm --stdout )
     case $desktop in
         1|2)
           arch_chroot "systemctl enable gdm.service"
@@ -269,7 +268,49 @@ install_descktopmanager() {
           arch_chroot "systemctl enable lxdm.service"
           ;; 
     esac
+    Install_app
 }
+
+
+Install_app() {
+    #   nodejs npm lollypop
+    cmd=(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Menu " --output-fd 1 --separate-output --extra-button --extra-label 'Select All' --cancel-label 'Select None' --checklist 'Choose the tools to install:' 0 0 0)
+
+    web_app () {
+        options=(
+            'chromium' '' off
+            'midori' ''  off
+            'firefox' '' on
+            'brave' '' off
+        )
+        web_choices=$("${cmd[@]}" "${options[@]}")
+    }
+    editor_app () {
+        options=(
+            'gedit' '' off
+            'mousepad' '' off
+            'leafpad' '' off
+        )
+        editor_choices=$("${cmd[@]}" "${options[@]}")
+    }
+    app () {
+        options=(
+            'tilix' '' off
+            'vlc' ''  off
+            'libreoffice-fresh' '' off
+            'lollypop' '' off
+        )
+        app_choices=$("${cmd[@]}" "${options[@]}")
+    }
+
+    web_app
+    editor_app
+    app
+
+    PKGS=("${web_choices[@]}" "${app_choices[@]}" "${editor_choices[@]}")
+    arch_chroot "pacman -Sy  ${PKGS[@]} eog gparted evince --noconfirm --needed --asdeps"
+}
+
 ######################################################################
 ##                                                                  ##
 ##                            Execution                             ##
