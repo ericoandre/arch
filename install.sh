@@ -268,48 +268,47 @@ install_descktopmanager() {
           arch_chroot "systemctl enable lxdm.service"
           ;; 
     esac
-    Install_app
 }
 
 
-Install_app() {
-    #   nodejs npm lollypop
-    cmd=(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Menu " --output-fd 1 --separate-output --extra-button --extra-label 'Select All' --cancel-label 'Select None' --checklist 'Choose the tools to install:' 0 0 0)
+# Install_app() {
+#     #   nodejs npm lollypop
+#     cmd=(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Menu " --output-fd 1 --separate-output --extra-button --extra-label 'Select All' --cancel-label 'Select None' --checklist 'Choose the tools to install:' 0 0 0)
 
-    web_app () {
-        options=(
-            'chromium' '' off
-            'midori' ''  off
-            'firefox' '' on
-            'brave' '' off
-        )
-        web_choices=$("${cmd[@]}" "${options[@]}")
-    }
-    editor_app () {
-        options=(
-            'gedit' '' off
-            'mousepad' '' off
-            'leafpad' '' off
-        )
-        editor_choices=$("${cmd[@]}" "${options[@]}")
-    }
-    app () {
-        options=(
-            'tilix' '' off
-            'vlc' ''  off
-            'libreoffice-fresh' '' off
-            'lollypop' '' off
-        )
-        app_choices=$("${cmd[@]}" "${options[@]}")
-    }
+#     web_app () {
+#         options=(
+#             'chromium' '' off
+#             'midori' ''  off
+#             'firefox' '' on
+#             'brave' '' off
+#         )
+#         web_choices=$("${cmd[@]}" "${options[@]}")
+#     }
+#     editor_app () {
+#         options=(
+#             'gedit' '' off
+#             'mousepad' '' off
+#             'leafpad' '' off
+#         )
+#         editor_choices=$("${cmd[@]}" "${options[@]}")
+#     }
+#     app () {
+#         options=(
+#             'tilix' '' off
+#             'vlc' ''  off
+#             'libreoffice-fresh' '' off
+#             'lollypop' '' off
+#         )
+#         app_choices=$("${cmd[@]}" "${options[@]}")
+#     }
 
-    web_app
-    editor_app
-    app
+#     web_app
+#     editor_app
+#     app
 
-    PKGS=("${web_choices[@]}" "${app_choices[@]}" "${editor_choices[@]}")
-    arch_chroot "pacman -Sy  ${PKGS[@]} eog gparted evince --noconfirm --needed --asdeps"
-}
+#     PKGS=("${web_choices[@]}" "${app_choices[@]}" "${editor_choices[@]}")
+#     arch_chroot "pacman -Sy  ${PKGS[@]} eog gparted evince --noconfirm --needed --asdeps"
+# }
 
 ######################################################################
 ##                                                                  ##
