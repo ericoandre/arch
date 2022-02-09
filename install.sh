@@ -231,7 +231,7 @@ install_descktopmanager() {
           DEpkg="gnome gnome-tweak-tool "
           ;;
         3)
-         DEpkg="plasma plasma-nm kde-applications dolphin plasma-wayland-session konsole kate kcalc ark gwenview spectacle okular packagekit-qt5 " 
+         DEpkg="plasma plasma-nm dolphin plasma-wayland-session konsole kate kcalc ark gwenview spectacle okular packagekit-qt5 " 
           ;;
         4)
           DEpkg="cinnamon sakura gnome-disk-utility nemo-fileroller gnome-software gnome-system-monitor gnome-screenshot network-manager-applet "
@@ -269,7 +269,7 @@ install_descktopmanager() {
           arch_chroot "pacman -Sy lightdm lightdm-gtk-greeter lightdm-webkit2-greeter --noconfirm --needed --asdeps"
           git clone https://github.com/jelenis/login-manager.git ${MOINTPOINT}/usr/share/lightdm-webkit/themes/lightdm-theme
           sed -i "s/^greeter-session=.*/greeter-session=lightdm-webkit2-greeter/g" ${MOINTPOINT}/etc/lightdm/lightdm.conf
-          #sed -i "s/^webkit_theme=.*/webkit_theme=lightdm-theme/g" ${MOINTPOINT}/etc/lightdm/lightdm-webkit2-greeter.conf
+          sed -i "s/^webkit_theme=.*/webkit_theme=lightdm-theme/g" ${MOINTPOINT}/etc/lightdm/lightdm-webkit2-greeter.conf
           arch_chroot "systemctl enable lightdm.service" 
           ;;
     esac
@@ -303,13 +303,10 @@ Install_app() {
     }
     app
     
-    arch_chroot "pacman -Sy ${PKGS[@]} --noconfirm --needed --asdeps"
-    
-    
-#     for PKG in "${PKGS[@]}"; do
-#         echo "INSTALLING: ${PKG}"
-#         arch_chroot "pacman -S "$PKG" --noconfirm --needed --asdeps"
-#     done  
+    for PKG in "${PKGS[@]}"; do
+        echo "INSTALLING: ${PKG}"
+        arch_chroot "pacman -Sy "$PKG" --noconfirm --needed"
+    done  
 }
 
 ######################################################################
