@@ -130,7 +130,6 @@ install_root() {
 
     cp /etc/pacman.d/mirrorlist ${MOINTPOINT}/etc/pacman.d/mirrorlist
     [[ "$(uname -m)" = "x86_64" ]] && sed -i '/multilib\]/,+1 s/^#//' ${MOINTPOINT}/etc/pacman.conf
-    # git clone https://aur.archlinux.org/yay.git /mnt/tmp
     arch_chroot "pacman -Sy && pacman-key --init && pacman-key --populate archlinux"
 }
 
@@ -303,7 +302,6 @@ Install_app() {
         PKGS=$("${cmd[@]}" "${options[@]}")
     }
     app
-    
     
     arch_chroot "pacman -Sy ${PKGS[@]} --noconfirm --needed --asdeps"
     
