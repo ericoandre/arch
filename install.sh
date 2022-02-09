@@ -231,7 +231,7 @@ install_descktopmanager() {
           DEpkg="gnome gnome-tweak-tool "
           ;;
         3)
-          DEpkg="plasma plasma-wayland-session dolphin konsole kate kcalc ark gwenview spectacle okular packagekit-qt5 "
+         DEpkg="plasma plasma-nm kde-applications dolphin konsole kate kcalc ark gwenview spectacle okular packagekit-qt5 "  #  plasma-wayland-session
           ;;
         4)
           DEpkg="cinnamon sakura gnome-disk-utility nemo-fileroller gnome-software gnome-system-monitor gnome-screenshot network-manager-applet "
