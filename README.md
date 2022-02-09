@@ -42,6 +42,48 @@ cd ~ && rm -rf /tmp/yay
 yay -S --noconfirm --needed  chrome-gnome-shell gnome-shell-extension-dash-to-dock 
 ```
 
+### Fonts
+```bash
+sudo pacman -S freetype2 terminus-font ttf-bitstream-vera ttf-dejavu ttf-droid ttf-fira-mono ttf-fira-sans ttf-freefont ttf-inconsolata ttf-liberation ttf-linux-libertine ttf-ubuntu-font-family xorg-xfontsel
+```
+
+
+## Installing Plasma and KDE:
+
+```bash
+pacman -S sddm plasma kde-applications plasma-nm sddm
+```
+### Plasma and KDE, livrar de elementos como jogos, o pacote KDE PIM (e-mail, contatos, etc) junto com o serviço akonadi, ferramentas multimídia, etc:
+
+```bash
+pacman -R kdemultimedia kdegames kdeedu discover telepathy-kde kopete umbrello kdepim-addons kdepim-apps-libs kdepim-runtime akonadi kaddressbook kalarm kmail kontact korganizer calendarsupport knotes messagelib akonadi-calendar-tools akonadiconsole akregator eventviews grantlee-editor mailcommon pim-data-exporter  akonadi-import-wizard incidenceeditor mbox-importer
+```
+
+### Enable the firewall
+
+```bash
+sudo pacman -S ufw
+sudo ufw enable
+sudo ufw status verbos
+sudo systemctl enable ufw.service
+```
+
+### Install Media Codecs
+
+```bash
+sudo pacman -S exfat-utils fuse-exfat a52dec faac faad2 flac jasper lame libdca libdv gst-libav libmad libmpeg2 libtheora libvorbis libxv wavpack x264 xvidcore gstreamer0.10-plugins flashplugin libdvdcss libdvdread libdvdnav gecko-mediaplayer dvd+rw-tools dvdauthor dvgrab
+```
+
+### Install Inkscape Image Editor
+```bash
+sudo pacman -S inkscape
+```
+
+### Install Clementine Audio Player
+```bash
+sudo pacman -S clementine
+```
+
 
 <!-- 
 
