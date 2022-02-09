@@ -4,7 +4,7 @@ Instalador Modo auto BIOS/UEFI, com opcao de instalar  em hd sem particao.
 
 ### Visual Code Studio
 ```bash
-wget "https://go.microsoft.com/fwlink/?LinkID=620885" -O vscode.tar.gz
+wget "https://code.visualstudio.com/sha/download?build=stable&os=linux-x64" -O vscode.tar.gz
 sudo tar -vzxf vscode.tar.gz -C /opt/
 sudo ln -sf /opt/VSCode-linux-x64/code /usr/bin/code
 sudo echo -e '[Desktop Entry]\nVersion=1.0\nName=vscode\nExec=code\nIcon=/opt/VSCode-linux-x64/resources/app/resources/linux/code.png\nType=Application\nCategories=Development;Application' | sudo tee /usr/share/applications/vscode.desktop
@@ -12,7 +12,7 @@ sudo echo -e '[Desktop Entry]\nVersion=1.0\nName=vscode\nExec=code\nIcon=/opt/VS
 
 ### Sublime Text
 ```bash
-wget https://download.sublimetext.com/sublime_text_3_build_3211_x64.tar.bz2 -O sublime_text.tar.bz2
+wget "https://download.sublimetext.com/sublime_text_3_build_3211_x64.tar.bz2" -O sublime_text.tar.bz2
 sudo tar xjf sublime_text.tar.bz2 -C /opt/
 sudo ln -sf /opt/sublime_text_3/sublime_text /usr/bin/sublime
 sudo echo -e '[Desktop Entry]\nVersion=1.0\nName=sublime text 3\nExec=sublime\nIcon=/opt/sublime_text_3/Icon/256x256/sublime-text.png\nType=Application\nCategories=Development;Application' | sudo tee /usr/share/applications/sublime_text.desktop
@@ -31,9 +31,9 @@ sudo echo -e '[Desktop Entry]\nVersion=1.0\nName=Eclipse\nExec=eclipse\nTerminal
 ### Yay
 
 ```bash
-cd /tmp && git clone https://aur.archlinux.org/yay.git
-cd /tmp/yay && makepkg -si --noconfirm
-cd ~ && rm -rf /tmp/yay
+git clone https://aur.archlinux.org/yay.git
+cd /yay && makepkg -si --noconfirm
+cd ~ && rm -rf /yay
 ```
 
 ### gnome-extension
