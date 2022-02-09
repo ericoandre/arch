@@ -140,6 +140,21 @@ sudo pacman -S --noconfirm wine lib324-vkd3d lib324-libldap wine-mono wine-gecko
 
 
 
+<!-- lightdm lightdm-gtk-greeter lightdm-webkit2-greeter   
+
+lightdm-webkit-theme-aether
+
+systemctl enable lightdm.service
+
+
+greeter-session=lightdm-webkit2-greeter   /etc/lightdm/lightdm.conf
+
+$ git clone https://github.com/jelenis/login-manager.git
+# cp -r lightdm-theme /usr/share/lightdm-webkit/themes/
+
+webkit_theme=lightdm-theme  /etc/lightdm/lightdm-webkit2-greeter.conf
+ -->
+
 <!-- 
 The Windows .efi file
 
