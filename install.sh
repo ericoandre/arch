@@ -249,7 +249,7 @@ install_descktopmanager() {
     esac
     arch_chroot "pacman -Sy $DEpkg audacious pulseaudio pulseaudio-alsa pavucontrol xscreensaver archlinux-wallpaper xdg-user-dirs-gtk adwaita-icon-theme papirus-icon-theme oxygen-icons faenza-icon-theme --noconfirm --needed --asdeps"
     
-    desktop=$(dialog  --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " login manager " --menu "Qual gerenciador de exibição você gostaria de usar?" 12 50 50 1 gdm 2 sddm 3 lxdm --stdout )
+    desktop=$(dialog  --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " login manager " --menu "Qual gerenciador de exibição você gostaria de usar?" 12 50 50 1 gdm 2 sddm 3 lxdm 4 lightdm --stdout )
     case $desktop in
         1)
           arch_chroot "pacman -Sy gdm --noconfirm --needed --asdeps"
@@ -266,9 +266,11 @@ install_descktopmanager() {
           arch_chroot "pacman -Sy lxdm --noconfirm --needed --asdeps"
           arch_chroot "systemctl enable lxdm.service" 
           ;;
-        4)
-          git clone https://github.com/jelenis/login-manager.git ${MOINTPOINT}/usr/share/lightdm-webkit/themes/lightdm-theme
+        4|*)
           arch_chroot "pacman -Sy lightdm lightdm-gtk-greeter lightdm-webkit2-greeter --noconfirm --needed --asdeps"
+          git clone https://github.com/jelenis/login-manager.git ${MOINTPOINT}/usr/share/lightdm-webkit/themes/lightdm-theme
+          sed -i "s/^greeter-session=.*/greeter-session=lightdm-webkit2-greeter/g" ${MOINTPOINT}/etc/lightdm/lightdm.conf
+          #sed -i "s/^webkit_theme=.*/webkit_theme=lightdm-theme/g" ${MOINTPOINT}/etc/lightdm/lightdm-webkit2-greeter.conf
           arch_chroot "systemctl enable lightdm.service" 
           ;;
     esac
@@ -302,10 +304,14 @@ Install_app() {
     }
     app
     
-    for PKG in "${PKGS[@]}"; do
-        echo "INSTALLING: ${PKG}"
-        arch_chroot "pacman -S "$PKG" --noconfirm --needed --asdeps"
-    done  
+    
+    arch_chroot "pacman -Sy ${PKGS[@]} --noconfirm --needed --asdeps"
+    
+    
+#     for PKG in "${PKGS[@]}"; do
+#         echo "INSTALLING: ${PKG}"
+#         arch_chroot "pacman -S "$PKG" --noconfirm --needed --asdeps"
+#     done  
 }
 
 ######################################################################
