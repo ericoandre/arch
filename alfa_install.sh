@@ -348,6 +348,7 @@ Install_app() {
     cmd=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Menu " --output-fd 1 --separate-output --extra-button --extra-label 'Select All' --cancel-label 'Select None' --checklist 'Choose the tools to install:' 0 0 0 --stdout)
     app () {
         options=(
+            'deepin-screenshot' ''  off
             'tilix' '' on
             'vlc' ''  off
             'libreoffice-fresh' '' off
@@ -411,6 +412,8 @@ root_password
 # Criar Novo Usuário
 USER=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Criar Novo Usuário " --inputbox "\nDigite o nome do usuário. As letras DEVEM ser minúsculas.\n" 10 50 --stdout)
 user_password
+
+automatic_particao
 
 #### Instalcao
 config_install
