@@ -383,4 +383,4 @@ if [[ $? -eq 0 ]]; then
     install_descktopmanager
 fi
 
-reboote
+# reboote
