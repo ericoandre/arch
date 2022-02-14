@@ -120,7 +120,7 @@ sudo pacman -Syyu
 ### powerlevel10k
 
 ```bash
-yay -S --noconfirm --needed nerd-fonts-fira-code nordic-darker-standard-buttons-theme nordic-darker-theme nordic-theme numix-themes
+yay -S --noconfirm --needed nerd-fonts-fira-code nordic-darker-standard-buttons-theme nordic-darker-theme nordic-theme
 
 touch .cache/zshhistory
 mv arch/zsh .zsh
