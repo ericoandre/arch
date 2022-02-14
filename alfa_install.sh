@@ -13,13 +13,13 @@ VERSION="Arch Linux Installer"
 SWAPFILE=false
 UEFI=false
 
-BASE_PACKAGES=('base' 'base-devel' 'grub' 'archlinux-keyring' 'networkmanager' 'dhclient' 'dhcpcd' 'sudo' 'net-tools')
-BASE_EXTRAS=('dosfstools' 'os-prober' 'mtools' 'xf86-input-libinput' 'xf86-input-synaptics' 'synaptic' 'net-tools' 'acpi' 'acpid' 'dbus' 'pciutils' 'gvfs' 'alsa-plugins' 'alsa-utils' 'alsa-firmware' 'volumeicon' 'pavucontrol' 'pulseaudio' 'pulseaudio-alsa' 'xdg-user-dirs' 'zsh' 'zsh-syntax-highlighting' 'zsh-autosuggestions' 'ttf-droid' 'noto-fonts' 'ttf-liberation' 'ttf-freefont' 'ttf-dejavu' 'ttf-hack' 'ttf-roboto' 'freetype2' 'terminus-font' 'ttf-bitstream-vera' 'ttf-dejavu' 'ttf-droid' 'ttf-fira-mono' 'ttf-fira-sans' 'ttf-freefont' 'ttf-inconsolata' 'ttf-liberation' 'ttf-linux-libertine' 'ttf-ubuntu-font-family')
+BASE_PACKAGES=('base' 'base-devel' 'grub' 'archlinux-keyring' 'networkmanager' 'dhclient' 'dhcpcd' 'sudo' 'net-tools' 'nano')
+BASE_EXTRAS=('ntp' 'ntfs-3g' 'exfat-utils' 'bash-completion' 'neofetch' 'screenfetch' 'scrot' 'ufw' 'iptables' 'git' 'dosfstools' 'os-prober' 'mtools' 'xf86-input-libinput' 'xf86-input-synaptics' 'synaptic' 'net-tools' 'acpi' 'acpid' 'dbus' 'pciutils' 'gvfs' 'alsa-plugins' 'alsa-utils' 'alsa-firmware' 'volumeicon' 'pavucontrol' 'pulseaudio' 'pulseaudio-alsa' 'xdg-user-dirs' 'zsh' 'zsh-syntax-highlighting' 'zsh-autosuggestions' 'ttf-droid' 'noto-fonts' 'ttf-liberation' 'ttf-freefont' 'ttf-dejavu' 'ttf-hack' 'ttf-roboto' 'freetype2' 'terminus-font' 'ttf-bitstream-vera' 'ttf-dejavu' 'ttf-droid' 'ttf-fira-mono' 'ttf-fira-sans' 'ttf-freefont' 'ttf-inconsolata' 'ttf-liberation' 'ttf-linux-libertine' 'ttf-ubuntu-font-family')
 
-DESKTOP_DEFAULTS=('xscreensaver' 'archlinux-wallpaper' 'xdg-user-dirs-gtk' 'audacious' 'xorg' 'xorg-xkbcomp' 'xorg-xinit' 'xorg-server' 'xorg-twm' 'xorg-xclock' 'xorg-drivers' 'xorg-xkill' 'xorg-fonts-100dpi' 'xorg-fonts-75dpi' 'xorg-xfontsel' 'mesa' 'xterm' )
+DESKTOP_DEFAULTS=('xscreensaver' 'cmatrix' 'archlinux-wallpaper' 'xdg-user-dirs-gtk' 'audacious' 'xorg' 'xorg-xkbcomp' 'xorg-xinit' 'xorg-server' 'xorg-twm' 'xorg-xclock' 'xorg-drivers' 'xorg-xkill' 'xorg-fonts-100dpi' 'xorg-fonts-75dpi' 'xorg-xfontsel' 'mesa' 'xterm' )
 
-# glibc ntp go ibus dbus-glib dbus-python python python-pip scrot screenfetch wget cmatrix gcc htop make git ntfs-3g exfat-utils unrar p7zip tar rsync 
-# ufw iptables openbsd-netcat traceroute nmap iw  neofetch nano bash-completion
+#  go ibus dbus-glib dbus-python python python-pip wget htop gcc glibc make unrar p7zip tar rsync 
+# openbsd-netcat traceroute nmap iw 
 # 'adwaita-icon-theme' 'papirus-icon-theme' 'oxygen-icons' 'faenza-icon-theme' 'breeze-icons'
 
 # Config Suport
