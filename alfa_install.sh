@@ -96,7 +96,7 @@ automatic_particao() {
     if [[ $? -eq 1 ]]; then
       # Cria partição swap
       parted -s $DISK mkpart primary linux-swap $SWAP_START $SWAP_END
-      Parted "mkpart primary $ROOT_FS $ROOT_START --$ROOT_END"
+      Parted "mkpart primary $ROOT_FS $ROOT_START --${ROOT_END}"
 
       mkswap ${DISK}2
       swapon ${DISK}2
