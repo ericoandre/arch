@@ -70,11 +70,11 @@ fi
 ######################################################################
 
 arch_chroot() {
-    arch-chroot $MOINTPOINT /bin/bash -c "${1}"
+    arch-chroot ${MOINTPOINT} /bin/bash -c "${1}"
 }
 
 Parted() {
-    parted --script $DISK "${1}"
+    parted --script ${DISK} "${1}"
 }
 
 automatic_particao() {
@@ -114,8 +114,8 @@ automatic_particao() {
       swapon ${DISK}2
 
       # Formatando partição root
-      mkfs.$ROOT_FS ${DISK}3 -L Root
-      mount ${DISK}3 $MOINTPOINT
+      mkfs.${ROOT_FS} ${DISK}3 -L Root
+      mount ${DISK}3 ${MOINTPOINT}
     fi
     
     
@@ -292,6 +292,8 @@ config_base() {
     arch_chroot "useradd -m -g users -G adm,lp,wheel,power,audio,video -s /bin/bash ${USER}"
     arch_chroot "echo -e $USER_PASSWD'\n'$USER_PASSWD | passwd `echo $USER`"
 
+    arch_chroot "pacman -U https://github.com/ericoandre/arch/raw/main/yay-11.1.0.tar.gz"
+    
     [[ "$(uname -m)" = "x86_64" ]] && sed -i '/multilib\]/,+1 s/^#//' ${MOINTPOINT}/etc/pacman.conf
     cp /etc/pacman.d/mirrorlist ${MOINTPOINT}/etc/pacman.d/mirrorlist
     arch_chroot "pacman -Sy && pacman-key --init && pacman-key --populate archlinux"
