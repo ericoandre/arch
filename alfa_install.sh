@@ -10,7 +10,6 @@ SYSTEM="Unknown"
 VERSION="Arch Linux Installer"
 
 # 
-SWAPFILE=false
 UEFI=false
 
 BASE_PACKAGES=('base' 'base-devel' 'grub' 'archlinux-keyring' 'networkmanager' 'dhclient' 'dhcpcd' 'sudo' 'net-tools' 'nano')
@@ -388,7 +387,7 @@ pacman -Syy && pacman -S --noconfirm dialog terminus-font reflector
 reflector --verbose --protocol http --protocol https --latest 20 --sort rate --save /etc/pacman.d/mirrorlist && pacman -Syy
 
 dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Criar Swap " --clear --yesno "\nCriar memoria de paginação Swap em arquivo?" 7 50
-if [[ $? -eq 1 ]]; then
+if [[ $? -eq 0 ]]; then
   SWAPFILE=true
 fi
 
