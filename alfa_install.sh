@@ -429,4 +429,4 @@ install_base
 config_base
 install_boot
 
-reboote
+# reboote
