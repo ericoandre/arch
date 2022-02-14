@@ -72,6 +72,7 @@ fi
 arch_chroot() {
     arch-chroot $MOINTPOINT /bin/bash -c "${1}"
 }
+
 Parted() {
     parted --script $DISK "${1}"
 }
