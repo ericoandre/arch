@@ -96,7 +96,7 @@ automatic_particao() {
     if [[ $? -eq 1 ]]; then
       # Cria partição swap
       parted -s $DISK mkpart primary linux-swap $SWAP_START $SWAP_END
-      Parted "mkpart primary $ROOT_FS $ROOT_START -$ROOT_END"
+      Parted "mkpart primary $ROOT_FS $ROOT_START --$ROOT_END"
 
       mkswap ${DISK}2
       swapon ${DISK}2
@@ -105,7 +105,7 @@ automatic_particao() {
       mkfs.$ROOT_FS ${DISK}3 -L Root
       mount ${DISK}3 $MOINTPOINT
     else
-      Parted "mkpart primary $ROOT_FS $BOOT_END -${ROOT_END}"
+      Parted "mkpart primary $ROOT_FS $BOOT_END --${ROOT_END}"
 
       # Formatando partição root
       mkfs.$ROOT_FS ${DISK}2 -L Root
@@ -392,10 +392,10 @@ pacman -Syy && pacman -S --noconfirm dialog terminus-font reflector
 [[ "$(uname -m)" = "x86_64" ]] && sed -i '/multilib\]/,+1 s/^#//' /etc/pacman.conf
 reflector --verbose --protocol http --protocol https --latest 20 --sort rate --save /etc/pacman.d/mirrorlist && pacman -Syy
 
-dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Criar Swap " --clear --yesno "\nCriar memoria de paginação Swap em arquivo?" 7 50
-if [[ $? -eq 1 ]]; then
-  SWAPFILE=true
-fi
+# dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Criar Swap " --clear --yesno "\nCriar memoria de paginação Swap em arquivo?" 7 50
+# if [[ $? -eq 1 ]]; then
+#   SWAPFILE=true
+# fi
 
 # KERNEL=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)"  --title "$TITLE" --radiolist "Existem vários kernels disponíveis para o sistema.\n\nO mais comum é o atual kernel linux.\nEste kernel é o mais atualizado, oferecendo o melhor suporte de hardware.\nNo entanto, pode haver possíveis erros nesse kernel, apesar dos testes.\n\nO kernel linux-lts fornece um foco na estabilidade.\nEle é baseado em um kernel mais antigo, por isso pode não ter alguns recursos mais recentes.\n\nO kernel com proteção do linux é focado na segurança \nEle contém o Grsecurity Patchset e o PaX para aumentar a segurança. \n\nO kernel do linux-zen é o resultado de uma colaboração de hackers do kernel \npara fornecer o melhor kernel possível para os sistemas cotidianos. \n\nPor favor, selecione o kernel que você deseja instalar." 50 100 100 linux "" on linux-lts "" off linux-hardened "" off linux-zen "" off --stdout)
 
