@@ -165,19 +165,19 @@ config_install() {
     [[ $UEFI ]] && DESKTOP_PACKAGES+=('efibootmgr')
     
     if [ "$(grep -m1 vendor_id /proc/cpuinfo | awk '{print $3}')" = "GenuineIntel" ]; then
-        BASE_EXTRA+=('intel-ucode')
+        DESKTOP_PACKAGES+=('intel-ucode')
     elif [ "$proc" = "AuthenticAMD" ]; then
-        BASE_EXTRA+=('amd-ucode')
+        DESKTOP_PACKAGES+=('amd-ucode')
     fi
     
-    DESKTOP=$(dialog --title "Choose your Graphical Environment" --no-cancel --menu "Select the style of graphical environment you wish to \
+    DESKTOP=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "Choose your Graphical Environment" --no-cancel --menu "Select the style of graphical environment you wish to \
     use.\n\nGraphical environment:" 12 75 3 \
     "Desktop Environment" "Traditional complete graphical user interface" \
     "Window Manager" "Standalone minimal graphical user interface" \
     "None" "Command-line only interface"  --stdout)
     
     if [ "$DESKTOP" = "Desktop Environment" ]; then
-        GUI=$(dialog --title "Select a Desktop Environment" --menu "Select a desktop environment to install:" 15 65 8 \
+        GUI=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "Select a Desktop Environment" --menu "Select a desktop environment to install:" 15 65 8 \
         "Budgie" "Modern GNOME based desktop" \
         "Cinnamon" "Traditional desktop experience" \
         "Deepin" "Deepin desktop with extra software" \
@@ -189,7 +189,7 @@ config_install() {
         "MATE" "Continuation of the GNOME 2 desktop" \
         "Xfce" "Lightweight and modular desktop"  --stdout)
     elif [ "$DESKTOP" = "Window Manager" ]; then    
-        GUI=$(dialog --title "Select a Window Manager" --menu "Select a window manager to install:" 13 75 6 \
+        GUI=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "Select a Window Manager" --menu "Select a window manager to install:" 13 75 6 \
         "awesome" "Highly configurable, dynamic window manager" \
         "bspwm" "Tiling window manager based on binary space partitioning" \
         "Fluxbox" "Stacking window manager based on Blackbox" \
@@ -230,7 +230,7 @@ config_install() {
         if $bluetooth; then
             bluetooth_enabled=true
             DESKTOP_PACKAGES+=('bluez' 'bluez-utils' 'pulseaudio-bluetooth')
-            dialog --title "Install Bluetooth Manager" --yesno "Would you like to install a graphical Bluetooth manager?\n\nThe utility that best integrates with the desktop environment you selected will be installed." 8 60
+            dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "Install Bluetooth Manager" --yesno "Would you like to install a graphical Bluetooth manager?\n\nThe utility that best integrates with the desktop environment you selected will be installed." 8 60
             if [ $? -eq 0 ]; then
                 case "$GUI" in
                     "Budgie"|"GNOME") DESKTOP_PACKAGES+=('gnome-bluetooth') ;;
@@ -241,7 +241,7 @@ config_install() {
             fi
         fi
         
-        DM=$(dialog --title "Install a Display Manager" --menu "Select a display manager to install:" 10 50 3 "gdm" "GNOME Display Manager" "lightdm" "Lightweight Display Manager" "sddm" "Simple Desktop Display Manager" --stdout)
+        DM=$(dialog  --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)"  --title "Install a Display Manager" --menu "Select a display manager to install:" 10 50 3 "gdm" "GNOME Display Manager" "lightdm" "Lightweight Display Manager" "sddm" "Simple Desktop Display Manager" --stdout)
         if [ $? -eq 0 ]; then
             dm_enabled=true
             case "$DM" in
