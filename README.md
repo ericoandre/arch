@@ -74,6 +74,9 @@ sudo systemctl enable ufw.service
 sudo pacman -S exfat-utils fuse-exfat a52dec faac faad2 flac jasper lame libdca libdv gst-libav libmad libmpeg2 libtheora libvorbis libxv wavpack x264 xvidcore gstreamer0.10-plugins flashplugin libdvdcss libdvdread libdvdnav gecko-mediaplayer dvd+rw-tools dvdauthor dvgrab
 ```
 
+
+deepin-screenshot
+
 ### Install Inkscape Image Editor
 ```bash
 sudo pacman -S inkscape
