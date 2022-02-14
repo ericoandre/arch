@@ -293,7 +293,7 @@ config_base() {
     arch_chroot "echo -e $USER_PASSWD'\n'$USER_PASSWD | passwd `echo $USER`"
 
     arch_chroot "pacman -U https://github.com/ericoandre/arch/raw/main/yay-11.1.0.tar.gz"
-    
+
     [[ "$(uname -m)" = "x86_64" ]] && sed -i '/multilib\]/,+1 s/^#//' ${MOINTPOINT}/etc/pacman.conf
     cp /etc/pacman.d/mirrorlist ${MOINTPOINT}/etc/pacman.d/mirrorlist
     arch_chroot "pacman -Sy && pacman-key --init && pacman-key --populate archlinux"
@@ -420,6 +420,7 @@ root_password
 USER=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Criar Novo Usuário " --inputbox "\nDigite o nome do usuário. As letras DEVEM ser minúsculas.\n" 10 50 --stdout)
 user_password
 
+#
 automatic_particao
 
 #### Instalcao
