@@ -70,11 +70,11 @@ fi
 ######################################################################
 
 arch_chroot() {
-    arch-chroot ${MOINTPOINT} /bin/bash -c "${1}"
+    arch-chroot $MOINTPOINT /bin/bash -c "${1}"
 }
 
 Parted() {
-    parted --script ${DISK} "${1}"
+    parted --script $DISK "${1}"
 }
 
 automatic_particao() {
@@ -392,7 +392,8 @@ Install_app() {
 timedatectl set-ntp true
 pacman -Syy && pacman -S --noconfirm dialog terminus-font reflector 
 [[ "$(uname -m)" = "x86_64" ]] && sed -i '/multilib\]/,+1 s/^#//' /etc/pacman.conf
-reflector --verbose --protocol http --protocol https --latest 20 --sort rate --save /etc/pacman.d/mirrorlist && pacman -Syy
+reflector --verbose --protocol http --protocol https --latest 20 --sort rate --save /etc/pacman.d/mirrorlist
+pacman -Sy && pacman-key --init && pacman-key --populate archlinux
 
 dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Criar Swap " --clear --yesno "\nCriar memoria de paginação Swap em arquivo?" 7 50
 if [[ $? -eq 1 ]]; then
