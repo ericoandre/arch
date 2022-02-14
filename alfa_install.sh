@@ -78,7 +78,6 @@ Parted() {
 }
 
 automatic_particao() {
-    
     if $UEFI ; then
         # Configura o tipo da tabela de partições
         Parted "mklabel gpt"
@@ -94,37 +93,41 @@ automatic_particao() {
     fi
     
     dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Criar Swap " --clear --yesno "\nCriar memoria de paginação Swap em arquivo?" 7 50
-    if [[ $? -eq 0 ]]; then
-    
-    # if $SWAPFILE ; then
-        Parted "mkpart primary $ROOT_FS $BOOT_END -${ROOT_END}"
-        # Formatando partição root
-        mkfs.$ROOT_FS ${DISK}2 -L Root
-        mount ${DISK}2 $MOINTPOINT
-        
-        mkdir -p  ${MOINTPOINT}/opt/swap && touch ${MOINTPOINT}/opt/swap/swapfile
-        dd if=/dev/zero of=${MOINTPOINT}/opt/swap/swapfile bs=1M count=$SWAP_SIZE status=progress
-        chmod 600 ${MOINTPOINT}/opt/swap/swapfile 
-        mkswap ${MOINTPOINT}/opt/swap/swapfile
-        swapon ${MOINTPOINT}/opt/swap/swapfile
+    if [[ $? -eq 1 ]]; then
+      # Cria partição swap
+      parted -s $DISK mkpart primary linux-swap $SWAP_START $SWAP_END
+      Parted "mkpart primary $ROOT_FS $ROOT_START -$ROOT_END"
 
+      mkswap ${DISK}2
+      swapon ${DISK}2
+
+      # Formatando partição root
+      mkfs.$ROOT_FS ${DISK}3 -L Root
+      mount ${DISK}3 $MOINTPOINT
     else
-        parted "mkpart primary linux-swap $SWAP_START $SWAP_END"
-        Parted "mkpart primary $ROOT_FS $ROOT_START -$ROOT_END"
-        # Formatando partição swap
-        mkswap ${DISK}2
-        swapon ${DISK}2
-        # Formatando partição root
-        mkfs.$ROOT_FS ${DISK}3 -L Root
-        mount ${DISK}3 $MOINTPOINT
+      Parted "mkpart primary $ROOT_FS $BOOT_END -${ROOT_END}"
+
+      # Formatando partição root
+      mkfs.$ROOT_FS ${DISK}2 -L Root
+      mount ${DISK}2 $MOINTPOINT
+
+      mkdir -p  ${MOINTPOINT}/opt/swap && touch ${MOINTPOINT}/opt/swap/swapfile
+      dd if=/dev/zero of=${MOINTPOINT}/opt/swap/swapfile bs=1M count=$SWAP_SIZE status=progress
+      chmod 600 ${MOINTPOINT}/opt/swap/swapfile
+      mkswap ${MOINTPOINT}/opt/swap/swapfile
+      swapon ${MOINTPOINT}/opt/swap/swapfile
     fi
     
-    if $UEFI ; then 
+    
+    if $UEFI ; then
+        # Monta partição esp
         mkdir -p ${MOINTPOINT}/boot/efi && mount ${DISK}1 ${MOINTPOINT}/boot/efi
     else
+        # Monta partição boot
         mkdir -p ${MOINTPOINT}/boot && mount ${DISK}1 ${MOINTPOINT}/boot
     fi
 }
+
 install_driver_videos() {
     gpu_type=$(lspci)
     if grep -E "NVIDIA|GeForce" <<< ${gpu_type}; then
