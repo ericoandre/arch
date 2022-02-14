@@ -41,7 +41,6 @@ DISK=/dev/sda
 
 SWAP_SIZE=1024
 BOOT_SIZE=512
-ROOT_SIZE=0
 
 BOOT_FS=ext2
 ROOT_FS=ext4
@@ -54,7 +53,6 @@ SWAP_START=$BOOT_END
 SWAP_END=$(($SWAP_START+$SWAP_SIZE))
 
 ROOT_START=$SWAP_END
-ROOT_END=$(($ROOT_START+$ROOT_SIZE))
 
 # Check for UEFI
 if [ -d /sys/firmware/efi ]; then
@@ -96,7 +94,7 @@ automatic_particao() {
     if [[ $? -eq 1 ]]; then
       # Cria partição swap
       parted -s $DISK mkpart primary linux-swap $SWAP_START $SWAP_END
-      Parted "mkpart primary $ROOT_FS $ROOT_START --${ROOT_END}"
+      Parted "mkpart primary $ROOT_FS $ROOT_START --0"
 
       mkswap ${DISK}2
       swapon ${DISK}2
@@ -105,7 +103,7 @@ automatic_particao() {
       mkfs.$ROOT_FS ${DISK}3 -L Root
       mount ${DISK}3 $MOINTPOINT
     else
-      Parted "mkpart primary $ROOT_FS $BOOT_END --${ROOT_END}"
+      Parted "mkpart primary $ROOT_FS $BOOT_END --0"
 
       # Formatando partição root
       mkfs.$ROOT_FS ${DISK}2 -L Root
