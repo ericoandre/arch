@@ -287,9 +287,6 @@ config_base() {
     arch_chroot "useradd -m -g users -G adm,lp,wheel,power,audio,video -s /bin/bash ${USER}"
     arch_chroot "echo -e $USER_PASSWD'\n'$USER_PASSWD | passwd `echo $USER`"
 
-    nano /etc/sudoers
-    dionatan ALL=(ALL) ALL
-    
     [[ "$(uname -m)" = "x86_64" ]] && sed -i '/multilib\]/,+1 s/^#//' ${MOINTPOINT}/etc/pacman.conf
     cp /etc/pacman.d/mirrorlist ${MOINTPOINT}/etc/pacman.d/mirrorlist
     arch_chroot "pacman -Sy && pacman-key --init && pacman-key --populate archlinux"
