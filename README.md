@@ -71,7 +71,7 @@ sudo systemctl enable ufw.service
 ### Install Media Codecs
 
 ```bash
-sudo pacman -S exfat-utils fuse-exfat a52dec faac faad2 flac jasper lame libdca libdv gst-libav libmad libmpeg2 libtheora libvorbis libxv wavpack x264 xvidcore gstreamer0.10-plugins flashplugin libdvdcss libdvdread libdvdnav gecko-mediaplayer dvd+rw-tools dvdauthor dvgrab
+sudo pacman -S exfat-utils fuse-exfat a52dec faac faad2 flac jasper lame libdca libdv gst-libav libmad libmpeg2 libtheora libvorbis libxv wavpack x264 xvidcore libdvdcss libdvdread libdvdnav dvd+rw-tools dvdauthor dvgrab
 ```
 
 
@@ -87,6 +87,15 @@ sudo pacman -S inkscape
 sudo pacman -S clementine
 ```
 
+nano /etc/sudoers
+
+# %wheel ALL=(ALL) ALL
+
+
+sudo pacman -Rns plasma plasma-wayland-session
+
+git clone https://aur.archlinux.org/yay.git && cd yay
+makepkg -si
 
 <!-- 
 
@@ -138,7 +147,7 @@ grub-mkconfig -o /boot/grub/grub.cfg
 ### wine
 
 ```bash
-sudo pacman -S --noconfirm wine lib324-vkd3d lib324-libldap wine-mono wine-gecko winetricks
+sudo pacman -S --noconfirm wine wine-mono wine-gecko winetricks
 ```
 
 
@@ -177,8 +186,6 @@ sudo tar -xzvf ~/Downloads/sugar-dark.tar.gz -C /usr/share/sddm/themes
 Current=sugar-candy
 
 qt5-graphicaleffects
-
-
 
 
 pacman -S pulseaudio pulseaudio-alsa pavucontrol gnome-terminal firefox flashplugin vlc chromium unzip unrar p7zip pidgin skype deluge smplayer audacious qmmp gimp xfburn thunderbird gedit gnome-system-monitor
@@ -233,7 +240,3 @@ libpulse
 <!-- pacman -S gdm gnome-shell gnome-control-center gnome-tweak-tool -->
 <!-- pacmam -S nautilus chromium -->
 <!-- systemctl enable gdm.service -->
-
-
-
-

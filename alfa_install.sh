@@ -13,13 +13,19 @@ VERSION="Arch Linux Installer"
 UEFI=false
 
 BASE_PACKAGES=('base' 'base-devel' 'grub' 'archlinux-keyring' 'networkmanager' 'dhclient' 'dhcpcd' 'sudo' 'net-tools' 'nano')
-BASE_EXTRAS=('ntp' 'ntfs-3g' 'exfat-utils' 'bash-completion' 'neofetch' 'screenfetch' 'scrot' 'ufw' 'iptables' 'git' 'dosfstools' 'os-prober' 'mtools' 'xf86-input-libinput' 'xf86-input-synaptics' 'net-tools' 'acpi' 'acpid' 'dbus' 'pciutils' 'gvfs' 'alsa-plugins' 'alsa-utils' 'alsa-firmware' 'volumeicon' 'pavucontrol' 'pulseaudio' 'pulseaudio-alsa' 'xdg-user-dirs' 'zsh' 'zsh-syntax-highlighting' 'zsh-autosuggestions' 'ttf-droid' 'noto-fonts' 'ttf-liberation' 'ttf-freefont' 'ttf-dejavu' 'ttf-hack' 'ttf-roboto' 'freetype2' 'terminus-font' 'ttf-bitstream-vera' 'ttf-dejavu' 'ttf-droid' 'ttf-fira-mono' 'ttf-fira-sans' 'ttf-freefont' 'ttf-inconsolata' 'ttf-liberation' 'ttf-linux-libertine' 'ttf-ubuntu-font-family')
+BASE_EXTRAS=('wget' 'traceroute' 'jre8-openjdk' 'jre8-openjdk-headless' 'ntp' 'ntfs-3g' 'exfat-utils' 'bash-completion' 'neofetch' 'screenfetch' 'scrot' 'ufw' 'iptables' 'git' 'dosfstools' 'os-prober' 'mtools' 'xf86-input-libinput' 'xf86-input-synaptics' 'net-tools' 'acpi' 'acpid' 'dbus' 'pciutils' 'gvfs' 'alsa-plugins' 'alsa-utils' 'alsa-firmware' 'volumeicon' 'pavucontrol' 'pulseaudio' 'pulseaudio-alsa' 'xdg-user-dirs' 'zsh' 'zsh-syntax-highlighting' 'zsh-autosuggestions' 'ttf-droid' 'noto-fonts' 'ttf-liberation' 'ttf-freefont' 'ttf-dejavu' 'ttf-hack' 'ttf-roboto' 'freetype2' 'terminus-font' 'ttf-bitstream-vera' 'ttf-dejavu' 'ttf-droid' 'ttf-fira-mono' 'ttf-fira-sans' 'ttf-freefont' 'ttf-inconsolata' 'ttf-liberation' 'ttf-linux-libertine' 'ttf-ubuntu-font-family')
 
-DESKTOP_DEFAULTS=('xscreensaver' 'cmatrix' 'archlinux-wallpaper' 'xdg-user-dirs-gtk' 'audacious' 'xorg' 'xorg-xkbcomp' 'xorg-xinit' 'xorg-server' 'xorg-twm' 'xorg-xclock' 'xorg-drivers' 'xorg-xkill' 'xorg-fonts-100dpi' 'xorg-fonts-75dpi' 'xorg-xfontsel' 'mesa' 'xterm' )
-
-#  go ibus dbus-glib dbus-python python python-pip wget htop gcc glibc make unrar p7zip tar rsync 
+DESKTOP_DEFAULTS=('adwaita-icon-theme' 'papirus-icon-theme' 'oxygen-icons' 'faenza-icon-theme' 'breeze-icons' 'firefox' 'xscreensaver' 'cmatrix' 'archlinux-wallpaper' 'xdg-user-dirs-gtk' 'audacious' 'xorg' 'xorg-xkbcomp' 'xorg-xinit' 'xorg-server' 'xorg-twm' 'xorg-xclock' 'xorg-drivers' 'xorg-xkill' 'xorg-fonts-100dpi' 'xorg-fonts-75dpi' 'xorg-xfontsel' 'mesa' 'xterm' )
+ 
+# 'tilix'
+# 'libreoffice-fresh'
+# 'vlc' 'lollypop' 
+# 'chromium' 'midori' 'firefox' 
+# 'nodejs' 'npm' 'yarn'  
+# 'gedit' 'mousepad' 'leafpad' 
+# 'gimp' go ibus dbus-glib dbus-python python python-pip  htop gcc glibc make unrar p7zip tar rsync 
 # openbsd-netcat traceroute nmap iw 
-# 'adwaita-icon-theme' 'papirus-icon-theme' 'oxygen-icons' 'faenza-icon-theme' 'breeze-icons'
+
 
 # Config Suport
 KERNEL=linux
@@ -207,13 +213,13 @@ config_install() {
     if [ "$DESKTOP" != "None" ]; then
         case "$GUI" in
             "Budgie") DESKTOP_PACKAGES+=('budgie-desktop' 'gnome-control-center' 'mutter') ;;
-            "Cinnamon") DESKTOP_PACKAGES+=('cinnamon' 'cinnamon-translations' 'nemo-fileroller') ;;
-            "Deepin") DESKTOP_PACKAGES+=( 'plocate' 'lm_sensors' 'gvfs' 'gvfs-mtp' 'sysstat' 'deepin-picker' 'ntp' 'exfat-utils' 'ntfs-3g' 'deepin-community-wallpapers' 'qalculate-gtk' 'kodi-x11' 'deepin-control-center' 'deepin-kwin'  'deepin-shortcut-viewer' 'deepin-system-monitor' 'deepin-turbo' 'fractal' 'deepin-terminal-gtk' 'deepin-reader' 'deepin-editor' 'firefox' 'thunderbird' 'telegram-desktop' 'deepin-music' 'deepin-screenshot' 'deepin-compressor' 'deepin-printer' 'qbittorrent' 'deepin-image-viewer' 'deepin-album' 'kodi' 'simplescreenrecorder' 'guvcview-qt' 'aria2' 'pdfarranger' 'bpytop' 'git' 'wget' 'neofetch' 'nano' 'reflector' 'p7zip' 'unarchiver' 'sharutils' 'youtube-dl' 'mesa-demos' 'tree' 'bind-tools' 'dmidecode' 'hddtemp' 'jshon' 'expac' 'cups' 'cups-pdf' 'xorg-xinit' 'inetutils' 'keepassxc' 'flatpak' 'speedtest-cli' 'wavemon' 'cronie' 'uget' 'python-sip' 'usbutils' 'bash-completion' 'pacman-contrib' 'unarj' 'cpio' ) ;;
+            "Cinnamon") DESKTOP_PACKAGES+=('cinnamon' 'sakura' 'cinnamon-translations' 'nemo-fileroller') ;;
+            "Deepin") DESKTOP_PACKAGES+=('plocate' 'lm_sensors' 'gvfs' 'gvfs-mtp' 'sysstat' 'deepin-picker' 'ntp' 'exfat-utils' 'deepin-community-wallpapers' 'qalculate-gtk' 'kodi-x11' 'deepin-control-center' 'deepin-kwin'  'deepin-shortcut-viewer' 'deepin-system-monitor' 'deepin-turbo' 'fractal' 'deepin-terminal-gtk' 'deepin-reader' 'deepin-editor' 'firefox' 'thunderbird' 'telegram-desktop' 'deepin-music' 'deepin-screenshot' 'deepin-compressor' 'deepin-printer' 'qbittorrent' 'deepin-image-viewer' 'deepin-album' 'kodi' 'simplescreenrecorder' 'guvcview-qt' 'aria2' 'pdfarranger' 'bpytop' 'git' 'wget' 'neofetch' 'nano' 'reflector' 'p7zip' 'unarchiver' 'sharutils' 'youtube-dl' 'mesa-demos' 'tree' 'bind-tools' 'dmidecode' 'hddtemp' 'jshon' 'expac' 'cups' 'cups-pdf' 'xorg-xinit' 'inetutils' 'keepassxc' 'flatpak' 'speedtest-cli' 'wavemon' 'cronie' 'uget' 'python-sip' 'usbutils' 'bash-completion' 'pacman-contrib' 'unarj' 'cpio' ) ;;
             "GNOME") DESKTOP_PACKAGES+=('gnome' 'gnome-extra' 'gnome-tweak-tool') ;;
             "GNOME-SHELL") DESKTOP_PACKAGES+=('gnome-shell' 'gnome-backgrounds' 'gnome-control-center' 'gnome-screenshot' 'gnome-system-monitor' 'gnome-terminal' 'gnome-tweak-tool' 'nautilus' 'gvfs' 'gnome-calculator' 'gnome-disk-utility') ;;
             "KDE Plasma") DESKTOP_PACKAGES+=('plasma' 'dolphin' 'plasma-wayland-session' 'konsole' 'kate' 'kcalc' 'ark' 'gwenview' 'spectacle' 'okular' 'packagekit-qt5') ;;
             "LXDE") DESKTOP_PACKAGES+=('lxde') ;;
-            "LXQT") DESKTOP_PACKAGES+=('lxqt' xdg-utils libpulse libstatgrab libsysstat lm_sensors 'pavucontrol-qt') ;;
+            "LXQT") DESKTOP_PACKAGES+=('lxqt' 'xdg-utils' 'libpulse' 'libstatgrab' 'libsysstat' 'lm_sensors' 'pavucontrol-qt') ;;
             "MATE") DESKTOP_PACKAGES+=('mate' 'mate-extra' 'gtk-engines' 'gtk-engine-murrine') ;;
             "Xfce") DESKTOP_PACKAGES+=('xfce4' 'xfce4-goodies') ;;
             "awesome") DESKTOP_PACKAGES+=('awesome') ;;
@@ -260,7 +266,6 @@ config_install() {
 }
 install_base() {
     pacstrap $MOINTPOINT "${BASE_PACKAGES[@]}" ${KERNEL} ${KERNEL}-headers ${KERNEL}-firmware grub "${BASE_EXTRAS[@]}" "${DESKTOP_PACKAGES[@]}"
-    Install_app
 }
 config_base() {
     #### fstab
@@ -291,8 +296,6 @@ config_base() {
     #### criar usuario Definir senha do usuário 
     arch_chroot "useradd -m -g users -G adm,lp,wheel,power,audio,video -s /bin/bash ${USER}"
     arch_chroot "echo -e $USER_PASSWD'\n'$USER_PASSWD | passwd `echo $USER`"
-
-    arch_chroot "pacman -U https://github.com/ericoandre/arch/raw/main/yay-11.1.0.tar.gz"
 
     [[ "$(uname -m)" = "x86_64" ]] && sed -i '/multilib\]/,+1 s/^#//' ${MOINTPOINT}/etc/pacman.conf
     cp /etc/pacman.d/mirrorlist ${MOINTPOINT}/etc/pacman.d/mirrorlist
@@ -349,40 +352,6 @@ reboote(){
         umount -R $MOINTPOINT
         reboot
     fi
-}
-
-Install_app() {
-    cmd=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Menu " --output-fd 1 --separate-output --extra-button --extra-label 'Select All' --cancel-label 'Select None' --checklist 'Choose the tools to install:' 0 0 0 --stdout)
-    app () {
-        options=(
-            'deepin-screenshot' ''  off
-            'tilix' '' on
-            'vlc' ''  off
-            'libreoffice-fresh' '' off
-            'lollypop' '' off
-            'atom' '' off
-            'gedit' '' off
-            'mousepad' '' off
-            'leafpad' '' on
-            'chromium' '' off
-            'midori' ''  off
-            'firefox' '' on
-            'brave' '' off
-            'nodejs' '' off
-            'npm' '' off
-            'yarn' '' off
-            'gimp' '' off
-            'jre8-openjdk' '' on 
-            'jre8-openjdk-headless' '' off
-        )
-        PKGS=$("${cmd[@]}" "${options[@]}")
-    }
-    app
-    
-    for PKG in "${PKGS[@]}"; do
-        echo "INSTALLING: ${PKG}"
-        arch_chroot "pacman -Sy "$PKG" --noconfirm --needed"
-    done  
 }
 
 ######################################################################
