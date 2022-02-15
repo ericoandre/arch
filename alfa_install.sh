@@ -13,22 +13,20 @@ VERSION="Arch Linux Installer"
 UEFI=false
 
 BASE_PACKAGES=('base' 'base-devel' 'grub' 'archlinux-keyring' 'networkmanager' 'dhclient' 'dhcpcd' 'sudo'  'nano')
-BASE_EXTRAS=('go' 'python' 'python-pip' 'unrar' 'p7zip' 'tar' 'htop' 'gcc' 'glibc' 'make' 'rsync' 'wget' 'net-tools' 'openbsd-netcat' 'nmap' 'iw' 'traceroute' 'jre8-openjdk' 'jre8-openjdk-headless' 'ntp' 'ntfs-3g' 'exfat-utils' 'bash-completion' 'neofetch' 'screenfetch' 'scrot' 'ufw' 'iptables' 'git' 'dosfstools' 'os-prober' 'mtools' 'xf86-input-libinput' 'xf86-input-synaptics' 'net-tools' 'acpi' 'acpid' 'dbus' 'pciutils' 'gvfs' 'alsa-plugins' 'alsa-utils' 'alsa-firmware' 'volumeicon' 'pavucontrol' 'pulseaudio' 'pulseaudio-alsa' 'xdg-user-dirs' 'zsh' 'zsh-syntax-highlighting' 'zsh-autosuggestions' 'ttf-droid' 'noto-fonts' 'ttf-liberation' 'ttf-freefont' 'ttf-dejavu' 'ttf-hack' 'ttf-roboto' 'freetype2' 'terminus-font' 'ttf-bitstream-vera' 'ttf-dejavu' 'ttf-droid' 'ttf-fira-mono' 'ttf-fira-sans' 'ttf-freefont' 'ttf-inconsolata' 'ttf-liberation' 'ttf-linux-libertine' 'ttf-ubuntu-font-family')
+BASE_EXTRAS=('ibus' 'dbus-glib' 'dbus-python' 'go' 'python' 'python-pip' 'unrar' 'p7zip' 'tar' 'htop' 'gcc' 'glibc' 'make' 'rsync' 'wget' 'net-tools' 'openbsd-netcat' 'nmap' 'iw' 'traceroute' 'jre8-openjdk' 'jre8-openjdk-headless' 'ntp' 'ntfs-3g' 'exfat-utils' 'bash-completion' 'neofetch' 'screenfetch' 'scrot' 'ufw' 'iptables' 'git' 'dosfstools' 'os-prober' 'mtools' 'xf86-input-libinput' 'xf86-input-synaptics' 'net-tools' 'acpi' 'acpid' 'dbus' 'pciutils' 'gvfs' 'alsa-plugins' 'alsa-utils' 'alsa-firmware' 'volumeicon' 'pavucontrol' 'pulseaudio' 'pulseaudio-alsa' 'xdg-user-dirs' 'zsh' 'zsh-syntax-highlighting' 'zsh-autosuggestions' 'ttf-droid' 'noto-fonts' 'ttf-liberation' 'ttf-freefont' 'ttf-dejavu' 'ttf-hack' 'ttf-roboto' 'freetype2' 'terminus-font' 'ttf-bitstream-vera' 'ttf-dejavu' 'ttf-droid' 'ttf-fira-mono' 'ttf-fira-sans' 'ttf-freefont' 'ttf-inconsolata' 'ttf-liberation' 'ttf-linux-libertine' 'ttf-ubuntu-font-family')
 
-DESKTOP_DEFAULTS=('nodejs' 'npm' 'yarn' 'libreoffice-fresh' 'vlc' 'lollypop' 'firefox' 'leafpad' 'adwaita-icon-theme' 'papirus-icon-theme' 'oxygen-icons' 'faenza-icon-theme' 'breeze-icons' 'firefox' 'xscreensaver' 'cmatrix' 'archlinux-wallpaper' 'xdg-user-dirs-gtk' 'audacious' 'xorg' 'xorg-xkbcomp' 'xorg-xinit' 'xorg-server' 'xorg-twm' 'xorg-xclock' 'xorg-drivers' 'xorg-xkill' 'xorg-fonts-100dpi' 'xorg-fonts-75dpi' 'xorg-xfontsel' 'mesa' 'xterm' )
+DESKTOP_DEFAULTS=('tilix' 'nodejs' 'npm' 'yarn' 'libreoffice-fresh' 'vlc' 'lollypop' 'firefox' 'leafpad' 'adwaita-icon-theme' 'papirus-icon-theme' 'oxygen-icons' 'faenza-icon-theme' 'breeze-icons' 'firefox' 'xscreensaver' 'cmatrix' 'archlinux-wallpaper' 'xdg-user-dirs-gtk' 'audacious' 'xorg' 'xorg-xkbcomp' 'xorg-xinit' 'xorg-server' 'xorg-twm' 'xorg-xclock' 'xorg-drivers' 'xorg-xkill' 'xorg-fonts-100dpi' 'xorg-fonts-75dpi' 'xorg-xfontsel' 'mesa' 'xterm' )
  
-# 'tilix'
 # 'chromium' 'midori'  
 # 'gedit' 'mousepad'  
-# 'gimp' 'ibus' 'dbus-glib' 'dbus-python' 
-
+# 'gimp'  
 
 # Config Suport
 KERNEL=linux
 CURR_LOCALE=pt_BR.UTF-8
 FONT=lat0-16
 KEYMAP=br-abnt2
-XKBMAP=""
+XKBMAP=br
 ZONE=America
 SUBZONE=Recife
 CLOCK=utc
@@ -272,13 +270,10 @@ config_base() {
     
     #### Setting hw CLOCK
     arch_chroot "hwclock --systohc --${CLOCK}"
-
-    #
-    set_xkbmap
     
     #### locales setting locale pt_BR.UTF-8 UTF-8
-    echo -e "LANG=\"${LOCALE}\"\nLC_MESSAGES=\"${LOCALE}\"" > ${MOINTPOINT}/etc/locale.conf
-    sed -i "s/#${LOCALE}/${LOCALE}/" ${MOUNTPOINT}/etc/locale.gen
+    echo -e "LANG=${LOCALE}\nLC_MESSAGES=${LOCALE}" > ${MOINTPOINT}/etc/locale.conf
+    sed -i "s/#${LOCALE}/${LOCALE}/" ${MOINTPOINT}/etc/locale.gen
     arch_chroot "locale-gen"
     arch_chroot "export LANG=${LOCALE}"
     
@@ -304,9 +299,9 @@ config_base() {
     [[ $dm_enabled ]] && arch_chroot "systemctl enable ${DM}.service"
 
     arch_chroot "mkinitcpio -p ${KERNEL}"
-    
-    install_driver_videos
+
     install_driver_virt
+    install_driver_videos
 }
 install_boot() {
     if $UEFI ; then
