@@ -86,10 +86,10 @@ sudo pacman -S inkscape
 ```bash
 sudo pacman -S clementine
 ```
-
+<!-- 
 nano /etc/sudoers
 
-# %wheel ALL=(ALL) ALL
+# %wheel ALL=(ALL) ALL -->
 
 
 sudo pacman -Rns plasma plasma-wayland-session
