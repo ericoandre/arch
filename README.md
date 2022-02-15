@@ -111,9 +111,72 @@ sudo pacman-key --refresh-keys
 sudo pacman -Syyu
 
 
+/etc/profile.d/lang.sh
+
+# en_US is the Slackware default locale:
+export LANG=pt_BR
+export LC_ALL=pt_BR
+export LANGUAGE=pt_BR
 
 
 
+
+
+setxkbmap [-model xkb_model] [-layout xkb_layout] [-variant xkb_variant] [-option xkb_options]
+
+setxkbmap -model abnt2 -layout br -variant ,abnt2
+
+setxkbmap -model abnt2 -layout br -variant abnt2
+
+setxkbmap br
+
+
+
+setxkbmap -model pc104 -layout cz,us -variant ,dvorak -option grp:win_space_toggle
+
+
+
+/etc/X11/xorg.conf.d/00-keyboard.conf
+
+Section "InputClass"
+        Identifier "system-keyboard"
+        MatchIsKeyboard "on"
+        Option "XkbLayout" "cz,us"
+        Option "XkbModel" "pc104"
+        Option "XkbVariant" ",dvorak"
+        Option "XkbOptions" "grp:win_space_toggle"
+EndSection
+
+
+
+setxkbmap -rules xorg -model pc104 -layout us -option ""
+
+setxkbmap -rules xorg -model logicordless -layout "us,cz,de" -option "grp:alt_shift_toggle"
+
+
+Section "InputDevice"
+    Identifier "Keyboard1"
+    Driver "kbd"
+
+    Option "XkbModel" "logicordless"
+    Option "XkbLayout" "us,cz,de"
+    Option "XKbOptions" "grp:alt_shift_toggle"
+EndSection
+
+
+
+setxkbmap -rules xorg -model logicordless -layout "us,cz,de" -variant ",bksl," -option "grp:alt_shift_toggle"
+
+
+Section "InputDevice"
+    Identifier "Keyboard1"
+    Driver "kbd"
+
+    Option "XkbModel" "logicordless"
+    Option "XkbLayout" "us,cz,de"
+    Option "XkbVariant" ",bksl,"
+    Option "XKbOptions" "grp:alt_shift_toggle"
+EndSection
 
 
     
@@ -146,6 +209,193 @@ sed -i '/GRUB_THEME=/d' /etc/default/grub
 echo "GRUB_THEME=\"/boot/grub/themes/CyberRe/theme.txt\"" >> /etc/default/grub
 grub-mkconfig -o /boot/grub/grub.cfg
 ```
+
+
+git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/powerlevel10k
+echo 'source ~/powerlevel10k/powerlevel10k.zsh-theme' >>~/.zshrc
+
+/etc/X11/xorg.conf.d/00-keyboard.conf
+
+
+
+# Architecture
+ARCHI=$(uname -m)
+SYSTEM="Unknown"
+VERSION="Arch Linux Pos-installer"
+
+
+MOUNTPOINT=
+ANSWER=".answer"
+
+DIALOG() {
+    dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --column-separator "|" --exit-label "$_Back" --title "$@"
+}
+
+set_xkbmap() {
+    XKBMAP_LIST=""
+    keymaps_xkb=("af al am at az ba bd be bg br bt bw by ca cd ch cm cn cz de dk ee es et eu fi fo fr\
+      gb ge gh gn gr hr hu ie il in iq ir is it jp ke kg kh kr kz la lk lt lv ma md me mk ml mm mn mt mv\
+      ng nl no np pc ph pk pl pt ro rs ru se si sk sn sy tg th tj tm tr tw tz ua us uz vn za")
+
+    for i in ${keymaps_xkb}; do
+        XKBMAP_LIST="${XKBMAP_LIST} ${i} -"
+    done
+
+    DIALOG " $_PrepKBLayout " --menu "\n$_XkbmapBody\n " 0 0 16 ${XKBMAP_LIST} 2>${ANSWER} || return 0
+    XKBMAP=$(cat ${ANSWER} |sed 's/_.*//')
+    
+    echo -e "Section "\"InputClass"\"\nIdentifier "\"system-keyboard"\"\nMatchIsKeyboard "\"on"\"\nOption "\"XkbLayout"\" "\"${XKBMAP}"\"\nEndSection" \
+      > ${MOUNTPOINT}/etc/X11/xorg.conf.d/00-keyboard.conf
+}
+
+
+
+
+
+
+
+set_xkbmap() {
+    XKBMAP_LIST=""
+    keymaps_xkb=("af al am at az ba bd be bg br bt bw by ca cd ch cm cn cz de dk ee es et eu fi fo fr\
+      gb ge gh gn gr hr hu ie il in iq ir is it jp ke kg kh kr kz la lk lt lv ma md me mk ml mm mn mt mv\
+      ng nl no np pc ph pk pl pt ro rs ru se si sk sn sy tg th tj tm tr tw tz ua us uz vn za")
+
+    for i in ${keymaps_xkb}; do
+        XKBMAP_LIST="${XKBMAP_LIST} ${i} -"
+    done
+    
+    XKBMAP=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Definir a Localização do Sistema " --menu " t " 0 0 12  ${XKBMAP_LIST} --stdout)
+
+    XKBMAP=$(echo ${ANSWER} | sed 's/_.*//')
+    
+
+    echo -e "Section "\"InputClass"\"\nIdentifier "\"system-keyboard"\"\nMatchIsKeyboard "\"on"\"\nOption "\"XkbLayout"\" "\"${XKBMAP}"\"\nEndSection" \
+      > ${MOUNTPOINT}/etc/X11/xorg.conf.d/00-keyboard.conf
+}
+
+
+
+
+
+
+
+
+
+      "wayland" "-" off \
+      "xorg-server" "-" on \
+      "xorg-server-common" "-" off \
+      "xorg-xinit" "-" on \
+      "xorg-server-xwayland" "-" off \
+      "xf86-input-evdev" "-" off \
+      "xf86-input-keyboard" "-" on \
+      "xf86-input-libinput" "-" on \
+      "xf86-input-mouse" "-" on \
+      "xf86-input-synaptics" "-" off 2>${PACKAGES}
+
+
+
+      "awesome + vicious" "-" off \
+      "budgie-desktop" "-" off \
+      "cinnamon" "-" off \
+      "deepin" "-" off \
+      "deepin-extra" "-" off \
+      "enlightenment + terminology" "-" off \
+      "fluxbox + fbnews" "-" off \
+      "gnome" "-" off \
+      "gnome-extra" "-" off \
+      "gnome-shell" "-" off \
+      "i3-wm + i3lock + i3status" "-" off \
+      "icewm + icewm-themes" "-" off \
+      "jwm" "-" off \
+      "kde-applications" "-" off \
+      "lxde" "-" off \
+      "lxqt + oxygen-icons" "-" off \
+      "mate" "-" off \
+      "mate-extra" "-" off \
+      "mate-extra-gtk3" "-" off \
+      "mate-gtk3" "-" off \
+      "openbox + openbox-themes" "-" off \
+      "pekwm + pekwm-themes" "-" off \
+      "plasma" "-" off \
+      "plasma-desktop" "-" off \
+      "windowmaker" "-" off \
+      "xfce4" "-" off \
+      "xfce4-goodies" "-" off 2>${PACKAGES}
+
+
+          "bash-completion" "-" on \
+          "gamin" "-" on \
+          "gksu" "-" on \
+          "gnome-icon-theme" "-" on \
+          "gnome-keyring" "-" on \
+          "gvfs" "-" on \
+          "gvfs-afc" "-" on \
+          "gvfs-smb" "-" on \
+          "polkit" "-" on \
+          "poppler" "-" on \
+          "python2-xdg" "-" on \
+          "ntfs-3g" "-" on \
+          "ttf-dejavu" "-" on \
+          "xdg-user-dirs" "-" on \
+          "xdg-utils" "-" on \
+          "xterm" "-" on 2>${PACKAGES}
+
+
+      "ufw" "-" off \
+      "gufw" "-" off \
+      "ntp" "-" off \
+      "b43-fwcutter" "Broadcom 802.11b/g/n" off \
+      "bluez-firmware" "Broadcom BCM203x / STLC2300 Bluetooth" off \
+      "ipw2100-fw" "Intel PRO/Wireless 2100" off \
+      "ipw2200-fw" "Intel PRO/Wireless 2200" off \
+      "zd1211-firmware" "ZyDAS ZD1211(b) 802.11a/b/g USB WLAN" off 2>${PACKAGES}
+
+
+
+
+
+
+      "cups" "-" on \
+      "cups-pdf" "-" off \
+      "ghostscript" "-" on \
+      "gsfonts" "-" on \
+      "samba" "-" off 2>${PACKAGES}
+
+
+      ALSA=$(echo $ALSA | sed "s/alsa-utils - off/alsa-utils - on/g" | sed "s/alsa-plugins - off/alsa-plugins - on/g")
+
+      $ALSA "pulseaudio" "-" off $PULSE_EXTRA \
+      "paprefs" "pulseaudio GUI" off \
+      "pavucontrol" "pulseaudio GUI" off \
+      "ponymix" "pulseaudio CLI" off \
+      "volumeicon" "ALSA GUI" off \
+      "volwheel" "ASLA GUI" off 2>${PACKAGES}
+
+
+
+      "accerciser" "-" off \
+      "at-spi2-atk" "-" off \
+      "at-spi2-core" "-" off \
+      "brltty" "-" off \
+      "caribou" "-" off \
+      "dasher" "-" off \
+      "espeak" "-" off \
+      "espeakup" "-" off \
+      "festival" "-" off \
+      "java-access-bridge" "-" off \
+      "java-atk-wrapper" "-" off \
+      "julius" "-" off \
+      "orca" "-" off \
+      "qt-at-spi" "-" off \
+      "speech-dispatcher" "-" off 2>${PACKAGES}
+
+
+
+
+
+
+
+
 -->
 
 ### wine

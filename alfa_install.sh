@@ -12,19 +12,15 @@ VERSION="Arch Linux Installer"
 # 
 UEFI=false
 
-BASE_PACKAGES=('base' 'base-devel' 'grub' 'archlinux-keyring' 'networkmanager' 'dhclient' 'dhcpcd' 'sudo' 'net-tools' 'nano')
-BASE_EXTRAS=('wget' 'traceroute' 'jre8-openjdk' 'jre8-openjdk-headless' 'ntp' 'ntfs-3g' 'exfat-utils' 'bash-completion' 'neofetch' 'screenfetch' 'scrot' 'ufw' 'iptables' 'git' 'dosfstools' 'os-prober' 'mtools' 'xf86-input-libinput' 'xf86-input-synaptics' 'net-tools' 'acpi' 'acpid' 'dbus' 'pciutils' 'gvfs' 'alsa-plugins' 'alsa-utils' 'alsa-firmware' 'volumeicon' 'pavucontrol' 'pulseaudio' 'pulseaudio-alsa' 'xdg-user-dirs' 'zsh' 'zsh-syntax-highlighting' 'zsh-autosuggestions' 'ttf-droid' 'noto-fonts' 'ttf-liberation' 'ttf-freefont' 'ttf-dejavu' 'ttf-hack' 'ttf-roboto' 'freetype2' 'terminus-font' 'ttf-bitstream-vera' 'ttf-dejavu' 'ttf-droid' 'ttf-fira-mono' 'ttf-fira-sans' 'ttf-freefont' 'ttf-inconsolata' 'ttf-liberation' 'ttf-linux-libertine' 'ttf-ubuntu-font-family')
+BASE_PACKAGES=('base' 'base-devel' 'grub' 'archlinux-keyring' 'networkmanager' 'dhclient' 'dhcpcd' 'sudo'  'nano')
+BASE_EXTRAS=('go' 'python' 'python-pip' 'unrar' 'p7zip' 'tar' 'htop' 'gcc' 'glibc' 'make' 'rsync' 'wget' 'net-tools' 'openbsd-netcat' 'nmap' 'iw' 'traceroute' 'jre8-openjdk' 'jre8-openjdk-headless' 'ntp' 'ntfs-3g' 'exfat-utils' 'bash-completion' 'neofetch' 'screenfetch' 'scrot' 'ufw' 'iptables' 'git' 'dosfstools' 'os-prober' 'mtools' 'xf86-input-libinput' 'xf86-input-synaptics' 'net-tools' 'acpi' 'acpid' 'dbus' 'pciutils' 'gvfs' 'alsa-plugins' 'alsa-utils' 'alsa-firmware' 'volumeicon' 'pavucontrol' 'pulseaudio' 'pulseaudio-alsa' 'xdg-user-dirs' 'zsh' 'zsh-syntax-highlighting' 'zsh-autosuggestions' 'ttf-droid' 'noto-fonts' 'ttf-liberation' 'ttf-freefont' 'ttf-dejavu' 'ttf-hack' 'ttf-roboto' 'freetype2' 'terminus-font' 'ttf-bitstream-vera' 'ttf-dejavu' 'ttf-droid' 'ttf-fira-mono' 'ttf-fira-sans' 'ttf-freefont' 'ttf-inconsolata' 'ttf-liberation' 'ttf-linux-libertine' 'ttf-ubuntu-font-family')
 
-DESKTOP_DEFAULTS=('adwaita-icon-theme' 'papirus-icon-theme' 'oxygen-icons' 'faenza-icon-theme' 'breeze-icons' 'firefox' 'xscreensaver' 'cmatrix' 'archlinux-wallpaper' 'xdg-user-dirs-gtk' 'audacious' 'xorg' 'xorg-xkbcomp' 'xorg-xinit' 'xorg-server' 'xorg-twm' 'xorg-xclock' 'xorg-drivers' 'xorg-xkill' 'xorg-fonts-100dpi' 'xorg-fonts-75dpi' 'xorg-xfontsel' 'mesa' 'xterm' )
+DESKTOP_DEFAULTS=('nodejs' 'npm' 'yarn' 'libreoffice-fresh' 'vlc' 'lollypop' 'firefox' 'leafpad' 'adwaita-icon-theme' 'papirus-icon-theme' 'oxygen-icons' 'faenza-icon-theme' 'breeze-icons' 'firefox' 'xscreensaver' 'cmatrix' 'archlinux-wallpaper' 'xdg-user-dirs-gtk' 'audacious' 'xorg' 'xorg-xkbcomp' 'xorg-xinit' 'xorg-server' 'xorg-twm' 'xorg-xclock' 'xorg-drivers' 'xorg-xkill' 'xorg-fonts-100dpi' 'xorg-fonts-75dpi' 'xorg-xfontsel' 'mesa' 'xterm' )
  
 # 'tilix'
-# 'libreoffice-fresh'
-# 'vlc' 'lollypop' 
-# 'chromium' 'midori' 'firefox' 
-# 'nodejs' 'npm' 'yarn'  
-# 'gedit' 'mousepad' 'leafpad' 
-# 'gimp' go ibus dbus-glib dbus-python python python-pip  htop gcc glibc make unrar p7zip tar rsync 
-# openbsd-netcat traceroute nmap iw 
+# 'chromium' 'midori'  
+# 'gedit' 'mousepad'  
+# 'gimp' 'ibus' 'dbus-glib' 'dbus-python' 
 
 
 # Config Suport
@@ -276,11 +272,14 @@ config_base() {
     
     #### Setting hw CLOCK
     arch_chroot "hwclock --systohc --${CLOCK}"
+
+    #
+    set_xkbmap
     
     #### locales setting locale pt_BR.UTF-8 UTF-8
-    sed -i "s/#${LOCALE}/${LOCALE}/" ${MOINTPOINT}/etc/locale.gen
+    echo -e "LANG=\"${LOCALE}\"\nLC_MESSAGES=\"${LOCALE}\"" > ${MOINTPOINT}/etc/locale.conf
+    sed -i "s/#${LOCALE}/${LOCALE}/" ${MOUNTPOINT}/etc/locale.gen
     arch_chroot "locale-gen"
-    echo -e "LANG=${LOCALE}\nLC_MESSAGES=${LOCALE}" > ${MOINTPOINT}/etc/locale.conf
     arch_chroot "export LANG=${LOCALE}"
     
     #### virtual console keymap
@@ -343,6 +342,23 @@ user_password() {
         USER_PASSWD=$(echo $userpasswd)
     fi
 }
+
+set_xkbmap() {
+    XKBMAP_LIST=""
+    keymaps_xkb=("af al am at az ba bd be bg br bt bw by ca cd ch cm cn cz de dk ee es et eu fi fo fr\
+      gb ge gh gn gr hr hu ie il in iq ir is it jp ke kg kh kr kz la lk lt lv ma md me mk ml mm mn mt mv\
+      ng nl no np pc ph pk pl pt ro rs ru se si sk sn sy tg th tj tm tr tw tz ua us uz vn za")
+
+    for i in ${keymaps_xkb}; do
+        XKBMAP_LIST="${XKBMAP_LIST} ${i} -"
+    done
+    
+    XKBMAP=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Definir a Localização do Sistema " --menu " t " 0 0 12  ${XKBMAP_LIST} --stdout)
+    XKBMAP=$(echo ${XKBMAP} | sed 's/_.*//')
+    echo -e "Section "\"InputClass"\"\nIdentifier "\"system-keyboard"\"\nMatchIsKeyboard "\"on"\"\nOption "\"XkbLayout"\" "\"${XKBMAP}"\"\nEndSection" \
+      > ${MOUNTPOINT}/etc/X11/xorg.conf.d/00-keyboard.conf
+}
+
 reboote(){
     dialog --clear --title " Installation finished sucessfully " --yesno "\nDo you want to reboot?" 7 62
     if [[ $? -eq 0 ]]; then
@@ -381,6 +397,7 @@ HNAME=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Defin
 ZONE=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Definir Fuso horário e Relógio " --menu "\nO fuso horário é usado para definir correctamente o relógio do sistema." 20 50 50 $(cat /usr/share/zoneinfo/zone.tab | awk '{print $3}' | grep "/" | sed "s/\/.*//g" | sort -ud | sort | awk '{ printf ""$0""  " - " }') --stdout)
 SUBZONE=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Definir Fuso horário e Relógio " --menu "\nSeleccione a cidade mais próxima de você." 20 50 50 $(cat /usr/share/zoneinfo/zone.tab | awk '{print $3}' | grep "$ZONE/" | sed "s/$ZONE\///g" | sort -ud | sort | awk '{ printf ""$0""  " - " }') --stdout)
 
+#
 CLOCK=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Definir Fuso horário e Relógio " --radiolist "\nUTC é o padrão de tempo universal e é recomendado a menos que tenha dual-boot com o Windows." 12 50 30 "utc" "" ON "localtime" "" OFF --stdout)
 
 # Definir Senha Root
