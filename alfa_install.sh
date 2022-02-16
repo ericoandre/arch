@@ -12,6 +12,10 @@ VERSION="Arch Linux Installer"
 # 
 UEFI=false
 
+bluetooth_enabled=false
+dm_enabled=false
+DESKTOP_PACKAGES=()
+
 BASE_PACKAGES=('base' 'base-devel' 'grub' 'archlinux-keyring' 'networkmanager' 'dhclient' 'dhcpcd' 'sudo'  'nano')
 BASE_EXTRAS=('ibus' 'dbus-glib' 'dbus-python' 'go' 'python' 'python-pip' 'unrar' 'p7zip' 'tar' 'htop' 'gcc' 'glibc' 'make' 'rsync' 'wget' 'net-tools' 'openbsd-netcat' 'nmap' 'iw' 'traceroute' 'jre8-openjdk' 'jre8-openjdk-headless' 'ntp' 'ntfs-3g' 'exfat-utils' 'bash-completion' 'neofetch' 'screenfetch' 'scrot' 'ufw' 'iptables' 'git' 'dosfstools' 'os-prober' 'mtools' 'xf86-input-libinput' 'xf86-input-synaptics' 'net-tools' 'acpi' 'acpid' 'dbus' 'pciutils' 'gvfs' 'alsa-plugins' 'alsa-utils' 'alsa-firmware' 'volumeicon' 'pavucontrol' 'pulseaudio' 'pulseaudio-alsa' 'xdg-user-dirs' 'zsh' 'zsh-syntax-highlighting' 'zsh-autosuggestions' 'ttf-droid' 'noto-fonts' 'ttf-liberation' 'ttf-freefont' 'ttf-dejavu' 'ttf-hack' 'ttf-roboto' 'freetype2' 'terminus-font' 'ttf-bitstream-vera' 'ttf-dejavu' 'ttf-droid' 'ttf-fira-mono' 'ttf-fira-sans' 'ttf-freefont' 'ttf-inconsolata' 'ttf-liberation' 'ttf-linux-libertine' 'ttf-ubuntu-font-family')
 
@@ -161,10 +165,6 @@ install_driver_virt() {
 }
 
 config_install() {
-    bluetooth_enabled=false
-    dm_enabled=false
-
-    DESKTOP_PACKAGES=()
     DESKTOP_PACKAGES+=("${DESKTOP_DEFAULTS[@]}")
     
     [[ $UEFI ]] && DESKTOP_PACKAGES+=('efibootmgr')
@@ -254,8 +254,28 @@ config_install() {
                 "lxdm ") DESKTOP_PACKAGES+=('lxdm') ;;
                 "lightdm") DESKTOP_PACKAGES+=('lightdm' 'lightdm-gtk-greeter' 'lightdm-gtk-greeter-settings') ;;
                 "sddm") DESKTOP_PACKAGES+=('sddm') ;;
-            esac 
+            esac
+        else
+            case "$GUI" in
+                "Budgie") xinit_config="export XDG_CURRENT_DESKTOP=Budgie:GNOME ; exec budgie-desktop" ;;
+                "Cinnamon") xinit_config="exec cinnamon-session" ;;
+                "Deepin")   xinit_config="exec startdde" ;;
+                "GNOME") xinit_config="exec gnome-session" ;;
+                "GNOME-SHELL") xinit_config="exec gnome-session" ;;
+                "KDE Plasma") xinit_config="exec startkde" ;;
+                "LXDE") xinit_config="exec startlxde" ;;
+                "LXQT") xinit_config="exec startlxqt" ;;
+                "MATE") xinit_config="exec mate-session" ;;
+                "Xfce") xinit_config="exec startxfce4" ;;
+                "awesome") xinit_config="exec awesome" ;;
+                "bspwm") xinit_config="sxhkd & ; exec bspwm" ;;
+                "Fluxbox") xinit_config="exec startfluxbox" ;;
+                "i3") xinit_config="exec i3" ;;
+                "Openbox") xinit_config="exec openbox-session" ;;
+                "xmonad") xinit_config="exec xmonad" ;;
+            esac
         fi
+
     fi
 }
 install_base() {
@@ -296,7 +316,12 @@ config_base() {
     arch_chroot "pacman -Sy && pacman-key --init && pacman-key --populate archlinux"
     arch_chroot "systemctl enable NetworkManager.service acpid.service ntpd.service"
     [[ $bluetooth_enabled ]] && arch_chroot "systemctl enable bluetooth.service"
-    [[ $dm_enabled ]] && arch_chroot "systemctl enable ${DM}.service"
+
+    if [[ $dm_enabled ]] ; then
+        arch_chroot "systemctl enable ${DM}.service"
+    else
+        echo "$xinit_config" > ${MOINTPOINT}/home/"$USER"/.xinitrc
+    fi
 
     arch_chroot "mkinitcpio -p ${KERNEL}"
 
@@ -350,8 +375,7 @@ set_xkbmap() {
     
     XKBMAP=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Definir a Localização do Sistema " --menu " t " 0 0 12  ${XKBMAP_LIST} --stdout)
     XKBMAP=$(echo ${XKBMAP} | sed 's/_.*//')
-    echo -e "Section "\"InputClass"\"\nIdentifier "\"system-keyboard"\"\nMatchIsKeyboard "\"on"\"\nOption "\"XkbLayout"\" "\"${XKBMAP}"\"\nEndSection" \
-      > ${MOUNTPOINT}/etc/X11/xorg.conf.d/00-keyboard.conf
+    #echo -e "Section "\"InputClass"\"\nIdentifier "\"system-keyboard"\"\nMatchIsKeyboard "\"on"\"\nOption "\"XkbLayout"\" "\"${XKBMAP}"\"\nEndSection" > ${MOUNTPOINT}/etc/X11/xorg.conf.d/00-keyboard.conf
 }
 
 reboote(){
@@ -409,6 +433,7 @@ automatic_particao
 config_install
 install_base
 config_base
+set_xkbmap
 install_boot
 
 # reboote
