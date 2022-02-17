@@ -263,7 +263,6 @@ monta_particoes() {
                 exit 1
         fi
 }
-
 ##### ------------------------------------
 update_mirrorlist() {
         ERR=0
@@ -271,8 +270,141 @@ update_mirrorlist() {
         reflector --verbose --protocol http --protocol https --latest 20 --sort rate --save /etc/pacman.d/mirrorlist
         [[ "$(uname -m)" = "x86_64" ]] && sed -i '/multilib\]/,+1 s/^#//' /etc/pacman.conf && pacman -Sy
 }
+configure_instalando_sistema(){
+        [[ $UEFI ]] && BASE_EXTRAS+=('efibootmgr')
+
+        if [ "$(grep -m1 vendor_id /proc/cpuinfo | awk '{print $3}')" = "GenuineIntel" ]; then
+                BASE_EXTRAS+=('intel-ucode')
+        elif [ "$proc" = "AuthenticAMD" ]; then
+                BASE_EXTRAS+=('amd-ucode')
+        fi
+        while true; do
+                DESKTOP=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "Choose your Graphical Environment" --no-cancel --menu "Select the style of graphical environment you wish to \
+                        use.\n\nGraphical environment:" 12 75 3 \
+                        "Desktop Environment" "Traditional complete graphical user interface" \
+                        "Window Manager" "Standalone minimal graphical user interface" \
+                        "None" "Command-line only interface" --stdout)
+                if [ "$DESKTOP" = "Desktop Environment" ]; then
+                        GUI=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "Select a Desktop Environment" --menu "Select a desktop environment to install:" 15 65 8 \
+                                "GNOME SHELL" "Modern MiNIMAL simplicity focused desktop" \
+                                "KDE Plasma" "Full featured QT based desktop" \
+                                "LXDE" "Lightweight and efficient desktop" \
+                                "LXQT" "Lightweight and efficient QT based desktop" \
+                                "Xfce" "Lightweight and modular desktop" --stdout)
+                        [[ $? -eq 0 ]] && break
+                elif [ "$DESKTOP" = "Window Manager" ]; then 
+                        GUI=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "Select a Window Manager" --menu "Select a window manager to install:" 13 75 6 \
+                                "awesome" "Highly configurable, dynamic window manager" \
+                                "bspwm" "Tiling window manager based on binary space partitioning" \
+                                "Fluxbox" "Stacking window manager based on Blackbox" \
+                                "i3" "Dynamic tiling window manager inspired by wmii" \
+                                "Openbox" "Highly configurable, stacking window manager" \
+                                "xmonad" "Dynamic tiling window manager configured in Haskell" --stdout)
+                        [[ $? -eq 0 ]] && break
+                else
+                        break
+                fi
+        done
+
+        if [ "$DESKTOP" != "None" ]; then
+                DESKTOP_PACKAGES+=("${DESKTOP_DEFAULTS[@]}")
+                case "$GUI" in
+                        "GNOME SHELL") 
+                        DESKTOP_PACKAGES+=('gnome-shell' 'gnome-backgrounds' 'gnome-control-center' 'gnome-screenshot' 'gnome-system-monitor' 'gnome-terminal' 'gnome-tweak-tool' 'nautilus' 'gvfs' 'gnome-calculator' 'gnome-disk-utility') 
+                        xinit_config="exec gnome-session" 
+                        ;;
+                        "KDE Plasma") 
+                        DESKTOP_PACKAGES+=('plasma' 'dolphin' 'plasma-wayland-session' 'konsole' 'kate' 'kcalc' 'ark' 'gwenview' 'spectacle' 'okular' 'packagekit-qt5') 
+                        xinit_config="exec startkde"
+                        ;;
+                        "LXDE") 
+                        DESKTOP_PACKAGES+=('lxde') 
+                        xinit_config="exec startlxde"
+                        ;;
+                        "LXQT") 
+                        DESKTOP_PACKAGES+=('lxqt' 'xdg-utils' 'libpulse' 'libstatgrab' 'libsysstat' 'lm_sensors' 'pavucontrol-qt') 
+                        xinit_config="exec startlxqt"
+                        ;;
+                        "Xfce") 
+                        DESKTOP_PACKAGES+=('xfce4' 'xfce4-goodies') 
+                        xinit_config="exec startxfce4"
+                        ;;
+                        "awesome") 
+                        DESKTOP_PACKAGES+=('awesome') 
+                        xinit_config="exec awesome"
+                        ;;
+                        "bspwm") 
+                        DESKTOP_PACKAGES+=('bspwm' 'sxhkd') 
+                        xinit_config="sxhkd & ; exec bspwm"
+                        ;; # 
+                        "Fluxbox") 
+                        DESKTOP_PACKAGES+=('fluxbox') 
+                        xinit_config="exec startfluxbox"
+                        ;;
+                        "i3") 
+                        DESKTOP_PACKAGES+=('i3') 
+                        xinit_config="exec i3"
+                        ;;
+                        "Openbox") 
+                        DESKTOP_PACKAGES+=('openbox') 
+                        xinit_config="exec openbox-session"
+                        ;;
+                        "xmonad") 
+                        DESKTOP_PACKAGES+=('xmonad' 'xmonad-contrib') 
+                        xinit_config="exec xmonad"
+                        ;;
+                esac
+                # GNOME already has networkmanager applet built-in. Plasma uses plasma-nm
+                if [ "$GUI" != "GNOME" ]; then
+                        if [ "$GUI" = "KDE Plasma" ]; then
+                                DESKTOP_PACKAGES+=('plasma-nm')
+                        else
+                                DESKTOP_PACKAGES+=('network-manager-applet' 'gnome-keyring')
+                        fi
+                fi
+
+                # Check for available bluetooth devices
+                if $bluetooth; then
+                        bluetooth_enabled=true
+                        DESKTOP_PACKAGES+=('bluez' 'bluez-utils' 'pulseaudio-bluetooth')
+                        dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "Install Bluetooth Manager" --yesno "Would you like to install a graphical Bluetooth manager?\n\nThe utility that best integrates with the desktop environment you selected will be installed." 8 60
+                        if [ $? -eq 0 ]; then
+                                case "$GUI" in
+                                        "Budgie"|"GNOME") DESKTOP_PACKAGES+=('gnome-bluetooth') ;;
+                                        "Cinnamon") DESKTOP_PACKAGES+=('blueberry') ;;
+                                        "KDE Plasma") DESKTOP_PACKAGES+=('bluedevil') ;;
+                                        *) DESKTOP_PACKAGES+=('blueman') ;;
+                                esac
+                        fi
+                fi
+
+                dialog --title "Install a Display Manager" --yesno "Would you like to install a graphical login manager?\n\nIf you select no, 'xinit' will be installed so you can manually start Xorg with the'startx' command." 8 60
+                if [ $? -eq 0 ]; then
+                        DM=$(dialog  --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)"  --title "Install a Display Manager" --menu "Select a display manager to install:" 10 50 3 "gdm" "GNOME Display Manager" "lxdm" "" "lightdm" "Lightweight Display Manager" "sddm" "Simple Desktop Display Manager" --stdout)
+                        if [ $? -eq 0 ]; then
+                                dm_enabled=true
+                                case "$DM" in
+                                        "gdm") DESKTOP_PACKAGES+=('gdm') ;;
+                                        "lxdm ") DESKTOP_PACKAGES+=('lxdm') ;;
+                                        "lightdm") DESKTOP_PACKAGES+=('lightdm' 'lightdm-gtk-greeter' 'lightdm-gtk-greeter-settings') ;;
+                                        "sddm") DESKTOP_PACKAGES+=('sddm') ;;
+                                esac
+                        fi
+                fi
+        fi
+}
+
 instalando_sistema() {
         ERR=0
+
+        [[ $UEFI ]] && BASE_EXTRAS+=('efibootmgr')
+
+        if [ "$(grep -m1 vendor_id /proc/cpuinfo | awk '{print $3}')" = "GenuineIntel" ]; then
+                BASE_EXTRAS+=('intel-ucode')
+        elif [ "$proc" = "AuthenticAMD" ]; then
+                BASE_EXTRAS+=('amd-ucode')
+        fi
+
         echo "Rodando pactrap base base-devel ${KERNEL}"
         pacstrap $MOINTPOINT "${BASE_PACKAGES[@]}" ${KERNEL} ${KERNEL}-headers ${KERNEL}-firmware "${BASE_EXTRAS[@]}" "${FONTES_PKGS[@]}" "${DESKTOP_PACKAGES[@]}" || ERR=1
         if [[ $ERR -eq 1 ]]; then
@@ -357,13 +489,14 @@ install_boot_grub() {
 pacman -Sy --noconfirm dialog &> /dev/null
 
 #### Particionamento
-# inicializa_hd
-# particiona_discos
-# cria_fs
-# monta_particoes
+inicializa_hd
+particiona_discos
+cria_fs
+monta_particoes
 
 #### Instalação
-# update_mirrorlist
+update_mirrorlist
+# configure_instalando_sistema
 instalando_sistema
 config_base
 install_boot_grub
