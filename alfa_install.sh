@@ -337,16 +337,22 @@ config_base() {
         fi     
 }
 install_boot_grub() {
-    if $UEFI ; then
-        arch_chroot "grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB --recheck"
-        mkdir ${MOINTPOINT}/boot/efi/EFI/boot && mkdir ${MOINTPOINT}/boot/grub/locale
-        cp ${MOINTPOINT}/boot/efi/EFI/grub_uefi/grubx64.efi ${MOINTPOINT}/boot/efi/EFI/boot/bootx64.efi
-    else
-        arch_chroot "grub-install --target=i386-pc --recheck $DISK"
-        grub-install --target=i386-pc --recheck /dev/sda
-    fi
-    cp ${MOINTPOINT}/usr/share/locale/en@quot/LC_MESSAGES/grub.mo ${MOINTPOINT}/boot/grub/locale/en.mo
-    arch_chroot "grub-mkconfig -o /boot/grub/grub.cfg"
+        ERR=0
+        echo "Boot Grub"
+        if $UEFI ; then
+                arch_chroot "grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB --recheck"
+                mkdir ${MOINTPOINT}/boot/efi/EFI/boot && mkdir ${MOINTPOINT}/boot/grub/locale  || ERR=1
+                cp ${MOINTPOINT}/boot/efi/EFI/grub_uefi/grubx64.efi ${MOINTPOINT}/boot/efi/EFI/boot/bootx64.efi  || ERR=1
+        else
+                arch_chroot "grub-install --target=i386-pc --recheck $DISK"
+        fi
+        cp ${MOINTPOINT}/usr/share/locale/en@quot/LC_MESSAGES/grub.mo ${MOINTPOINT}/boot/grub/locale/en.mo   || ERR=1
+        arch_chroot "grub-mkconfig -o /boot/grub/grub.cfg"
+
+        if [[ $ERR -eq 1 ]]; then
+                echo "Erro ao instalar sistema ${KERNEL}"
+                exit 1
+        fi
 }
 
 ##################################################
@@ -368,4 +374,4 @@ config_base
 install_boot_grub
 
 #### 
-reboot_system
+# reboot_system
