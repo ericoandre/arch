@@ -390,10 +390,10 @@ reboote(){
 ######################################################################
 
 timedatectl set-ntp true
-# reflector --verbose --protocol http --protocol https --latest 20 --sort rate --save /etc/pacman.d/mirrorlist
-# [[ "$(uname -m)" = "x86_64" ]] && sed -i '/multilib\]/,+1 s/^#//' /etc/pacman.conf
-# pacman -Sy --noconfirm dialog terminus-font reflector 
-# pacman-key --init && pacman-key --populate archlinux
+reflector --verbose --protocol http --protocol https --latest 10 --sort rate --save /etc/pacman.d/mirrorlist
+[[ "$(uname -m)" = "x86_64" ]] && sed -i '/multilib\]/,+1 s/^#//' /etc/pacman.conf
+pacman -Syy && pacman -S --noconfirm dialog terminus-font reflector 
+pacman-key --init && pacman-key --populate archlinux
 
 dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Criar Swap " --clear --yesno "\nCriar memoria de paginação Swap em arquivo?" 7 50
 [[ $? -eq 1 ]] && SWAPFILE=true
