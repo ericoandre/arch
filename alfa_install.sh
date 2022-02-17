@@ -391,11 +391,10 @@ reboote(){
 ######################################################################
 
 timedatectl set-ntp true
-
-pacman -Syy && pacman -S --noconfirm dialog terminus-font reflector 
-[[ "$(uname -m)" = "x86_64" ]] && sed -i '/multilib\]/,+1 s/^#//' /etc/pacman.conf
 reflector --verbose --protocol http --protocol https --latest 20 --sort rate --save /etc/pacman.d/mirrorlist
-pacman -Sy && pacman-key --init && pacman-key --populate archlinux
+[[ "$(uname -m)" = "x86_64" ]] && sed -i '/multilib\]/,+1 s/^#//' /etc/pacman.conf
+pacman -Sy --noconfirm dialog terminus-font reflector 
+# pacman-key --init && pacman-key --populate archlinux
 
 dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Criar Swap " --clear --yesno "\nCriar memoria de paginação Swap em arquivo?" 7 50
 if [[ $? -eq 1 ]]; then
@@ -425,7 +424,10 @@ USER=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Criar 
 user_password
 
 #### Particionamento esta configurado para usar todo o hd
-automatic_particao
+# automatic_particao
+
+mount ${DISK}3 $MOINTPOINT
+mount ${DISK}1 ${MOINTPOINT}/boot/efi
 
 #### Instalcao
 config_install
