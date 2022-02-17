@@ -294,34 +294,34 @@ config_base() {
         echo "locale.gen"
         sed -i "s/#${LOCALE}/${LOCALE}/" ${MOINTPOINT}/etc/locale.gen || ERR=1
         arch_chroot "locale-gen"  || ERR=1
-        arch_chroot "export LANG=${LOCALE}"  || ERR=1
+        arch_chroot "export LANG=${LOCALE}"
 
         # Configura layout do teclado
         echo "vconsole"
         echo -e "KEYMAP=${KEYMAP}\nFONT=${FONT}\nFONT_MAP=" > ${MOINTPOINT}/etc/vconsole.conf  || ERR=1
 
         # Configura hora Setting hw CLOCK
-        arch_chroot "hwclock --systohc --${CLOCK}"  || ERR=1
+        arch_chroot "hwclock --systohc --${CLOCK}" 
 
         # Setting timezone
         echo "timezone"
-        arch_chroot "ln -s /usr/share/zoneinfo/${ZONE}/${SUBZONE} /etc/localtime"  || ERR=1
+        arch_chroot "ln -s /usr/share/zoneinfo/${ZONE}/${SUBZONE} /etc/localtime" 
 
         # root password
         #root_password
-        arch_chroot "echo -e $ROOT_PASSWD'\n'$ROOT_PASSWD | passwd"  || ERR=1
+        arch_chroot "echo -e $ROOT_PASSWD'\n'$ROOT_PASSWD | passwd"
         #user_password
 
         # criar usuario Definir senha do usuário
-        arch_chroot "useradd -m -g users -G adm,lp,wheel,power,audio,video -s /bin/bash ${USER}"  || ERR=1
-        arch_chroot "echo -e $USER_PASSWD'\n'$USER_PASSWD | passwd `echo $USER`"  || ERR=1
+        arch_chroot "useradd -m -g users -G adm,lp,wheel,power,audio,video -s /bin/bash ${USER}" 
+        arch_chroot "echo -e $USER_PASSWD'\n'$USER_PASSWD | passwd `echo $USER`" 
 
         # fstab
         genfstab -U -p $MOINTPOINT >> ${MOINTPOINT}/etc/fstab || ERR=1
 
         # networkmanager acpi
         echo "enable networkmanager acpi"
-        arch_chroot "systemctl enable NetworkManager.service acpid.service ntpd.service"  || ERR=1
+        arch_chroot "systemctl enable NetworkManager.service acpid.service ntpd.service" 
 
         echo "driver"
         install_driver_virt
