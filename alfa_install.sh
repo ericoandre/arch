@@ -81,7 +81,11 @@ mounted=true
 xinit_config=''
 DESKTOP=''
 
-ROOT_DEVICE=${HD}2
+if [[ $SWAPFILE -eq false ]] ; then
+        ROOT_DEVICE=${HD}3
+else
+        ROOT_DEVICE=${HD}2
+fi
 
 # Check for UEFI
 [[ -d /sys/firmware/efi ]] && UEFI=true
@@ -221,16 +225,14 @@ cria_fs() {
         ERR=0
         echo "Formatando partição boot"
         if $UEFI ; then
-                mkfs.vfat -F32 -n BOOT ${HD}1 -L EFI 1>/dev/null || ERR=1
+                mkfs.vfat -F32 -n BOOT ${HD}1 1>/dev/null || ERR=1
         else
-                mkfs.$BOOT_FS ${HD}1 -L Boot 1>/dev/null || ERR=1
+                mkfs.$BOOT_FS ${HD}1 1>/dev/null || ERR=1
         fi
         if [[ $SWAPFILE -eq false ]]; then 
-                ROOT_DEVICE=${HD}3
                 # Cria e inicia a swap
                 echo "Formatando partição swap"
                 mkswap ${HD}2 || ERR=1
-                swapon ${HD}2 || ERR=1
         fi
         echo "Formatando partição root"
         mkfs.$ROOT_FS $ROOT_DEVICE -L Root 1>/dev/null || ERR=1
@@ -254,6 +256,7 @@ monta_particoes() {
                 mkdir ${MOINTPOINT}/boot || ERR=1
                 mount ${HD}1 ${MOINTPOINT}/boot || ERR=1
         fi
+        [[ $SWAPFILE -eq false ]] && swapon ${HD}2 || ERR=1
 
         if [[ $ERR -eq 1 ]]; then
                 echo "Erro ao Montar as partição"
@@ -346,9 +349,9 @@ install_boot_grub() {
 pacman -Sy --noconfirm dialog &> /dev/null
 
 #### Particionamento
-inicializa_hd
-particiona_discos
-cria_fs
+#inicializa_hd
+#particiona_discos
+#cria_fs
 monta_particoes
 
 #### Instalação
