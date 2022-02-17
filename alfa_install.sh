@@ -15,7 +15,7 @@ VERSION="Arch Linux Installer"
 BASE_PACKAGES=('base' 'base-devel' 'grub' 'sudo' 'nano')
 
 # Pacote extras (não são obrigatórios)
-BASE_EXTRAS=('ntfs-3g' 'exfat-utils' 'os-prober' 'dosfstools' 'mtools' 'acpi' 'acpid' 'zsh' 'zsh-syntax-highlighting' 'zsh-autosuggestions')
+BASE_EXTRAS=('ntpd' 'ntfs-3g' 'exfat-utils' 'os-prober' 'dosfstools' 'mtools' 'acpi' 'acpid' 'zsh' 'zsh-syntax-highlighting' 'zsh-autosuggestions')
 BASE_EXTRAS+=('unrar' 'tar' 'alsa-plugins' 'alsa-utils' 'alsa-firmware' 'pulseaudio' 'pulseaudio-alsa' 'pavucontrol' 'volumeicon' 'cmatrix')
 BASE_EXTRAS+=('dbus' 'ufw' 'traceroute' 'networkmanager' 'net-tools' 'scrot' 'neofetch' 'iw' 'bash-completion' 'iptables')
 BASE_EXTRAS+=('archlinux-keyring' 'wget' 'make' 'gcc' 'htop' 'git' 'pciutils' 'openbsd-netcat' 'nmap' 'ntp')
@@ -287,26 +287,30 @@ config_base() {
         echo -e "127.0.0.1    localhost.localdomain    localhost\n::1        localhost.localdomain    localhost\n127.0.1.1    $HNAME.localdomain    $HNAME" >> ${MOINTPOINT}/etc/hosts || ERR=1
 
         # Configura locale.conf locales setting locale pt_BR.UTF-8 UTF-8
+        echo "locale.conf"
         echo -e "LANG=${LOCALE}\nLC_MESSAGES=${LOCALE}" > ${MOINTPOINT}/etc/locale.conf || ERR=1
 
         # Configura locale.gen
+        echo "locale.gen"
         sed -i "s/#${LOCALE}/${LOCALE}/" ${MOINTPOINT}/etc/locale.gen || ERR=1
         arch_chroot "locale-gen"  || ERR=1
         arch_chroot "export LANG=${LOCALE}"  || ERR=1
 
         # Configura layout do teclado
+        echo "vconsole"
         echo -e "KEYMAP=${KEYMAP}\nFONT=${FONT}\nFONT_MAP=" > ${MOINTPOINT}/etc/vconsole.conf  || ERR=1
 
         # Configura hora Setting hw CLOCK
         arch_chroot "hwclock --systohc --${CLOCK}"  || ERR=1
 
         # Setting timezone
+        echo "timezone"
         arch_chroot "ln -s /usr/share/zoneinfo/${ZONE}/${SUBZONE} /etc/localtime"  || ERR=1
 
         # root password
-        root_password &> /dev/null
+        #root_password
         arch_chroot "echo -e $ROOT_PASSWD'\n'$ROOT_PASSWD | passwd"  || ERR=1
-        user_password &> /dev/null
+        #user_password
 
         # criar usuario Definir senha do usuário
         arch_chroot "useradd -m -g users -G adm,lp,wheel,power,audio,video -s /bin/bash ${USER}"  || ERR=1
@@ -316,6 +320,7 @@ config_base() {
         genfstab -U -p $MOINTPOINT >> ${MOINTPOINT}/etc/fstab || ERR=1
 
         # networkmanager acpi
+        echo "enable networkmanager acpi"
         arch_chroot "systemctl enable NetworkManager.service acpid.service ntpd.service"  || ERR=1
 
         install_driver_virt
@@ -349,10 +354,10 @@ install_boot_grub() {
 pacman -Sy --noconfirm dialog &> /dev/null
 
 #### Particionamento
-#inicializa_hd
-#particiona_discos
-#cria_fs
-monta_particoes
+# inicializa_hd
+# particiona_discos
+# cria_fs
+# monta_particoes
 
 #### Instalação
 update_mirrorlist
