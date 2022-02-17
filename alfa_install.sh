@@ -279,7 +279,9 @@ config_install() {
     fi
 }
 install_base() {
-    pacstrap $MOINTPOINT "${BASE_PACKAGES[@]}" ${KERNEL} ${KERNEL}-headers ${KERNEL}-firmware grub "${BASE_EXTRAS[@]}" "${DESKTOP_PACKAGES[@]}"
+    pacstrap $MOINTPOINT "${BASE_PACKAGES[@]}" ${KERNEL} ${KERNEL}-headers ${KERNEL}-firmware grub "${BASE_EXTRAS[@]}"
+    arch_chroot "pacman -Sy && pacman-key --init && pacman-key --populate archlinux"
+    pacstrap $MOINTPOINT "${DESKTOP_PACKAGES[@]}"
 }
 config_base() {
     #### fstab
@@ -433,7 +435,6 @@ automatic_particao
 config_install
 install_base
 config_base
-set_xkbmap
 install_boot
 
 # reboote

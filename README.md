@@ -119,6 +119,39 @@ export LC_ALL=pt_BR
 export LANGUAGE=pt_BR
 
 
+Install_app() {
+    cmd=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Menu " --output-fd 1 --separate-output --extra-button --extra-label 'Select All' --cancel-label 'Select None' --checklist 'Choose the tools to install:' 0 0 0 --stdout)
+    app () {
+        options=(
+            'tilix' '' on
+            'vlc' ''  off
+            'libreoffice-fresh' '' off
+            'lollypop' '' off
+            'atom' '' off
+            'gedit' '' off
+            'mousepad' '' off
+            'leafpad' '' on
+            'chromium' '' off
+            'midori' ''  off
+            'firefox' '' on
+            'brave' '' off
+            'nodejs' '' off
+            'npm' '' off
+            'yarn' '' off
+            'gimp' '' off
+            'jre8-openjdk' '' on 
+            'jre8-openjdk-headless' '' off
+        )
+        PKGS=$("${cmd[@]}" "${options[@]}")
+    }
+    app
+    
+    for PKG in "${PKGS[@]}"; do
+        echo "INSTALLING: ${PKG}"
+        arch_chroot "pacman -Sy "$PKG" --noconfirm --needed"
+    done  
+}
+
 
 
 

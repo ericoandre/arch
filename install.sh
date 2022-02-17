@@ -12,17 +12,25 @@ pacman -Syy && pacman -S --noconfirm dialog terminus-font reflector
 ARCHI=$(uname -m)
 SYSTEM="Unknown"
 VERSION="Arch Linux Installer"
-KERNEL=linux
 
-# Language Support
+#
 CURR_LOCALE=pt_BR.UTF-8
 FONT=lat0-16
 KEYMAP=br-abnt2
-XKBMAP=""
+XKBMAP=br
 ZONE=America
 SUBZONE=Recife
 CLOCK=utc
 HNAME=ArchVM
+KERNEL=linux
+
+#
+dm_enabled=false
+bluetooth_enabled=false
+DESKTOP=false
+GUI=false
+UEFI=false
+DEpkg=()
 
 # Installation
 MOINTPOINT=/mnt
@@ -35,8 +43,9 @@ ROOT_SIZE=0
 BOOT_FS=ext2
 ROOT_FS=ext4
 
-EXTRA_PKGS="archlinux-keyring glibc ntp sudo go ibus dbus dbus-glib dbus-python python python-pip scrot screenfetch wget cmatrix gcc htop make git ntfs-3g exfat-utils os-prober pciutils acpi acpid unrar p7zip tar rsync ufw iptables openbsd-netcat traceroute nmap iw net-tools networkmanager dhclient dhcpcd neofetch nano alsa-plugins alsa-utils alsa-firmware pulseaudio pulseaudio-alsa pavucontrol volumeicon bash-completion zsh zsh-syntax-highlighting zsh-autosuggestions"
-FONTES_PKGS="ttf-droid noto-fonts ttf-liberation ttf-freefont ttf-dejavu ttf-hack ttf-roboto" 
+BASE_PACKAGES=('base' 'base-devel' 'grub')
+EXTRA_PKGS=('ntfs-3g' 'exfat-utils' 'os-prober' 'dosfstools' 'mtools' 'archlinux-keyring' 'glibc' 'ntp' 'sudo' 'go' 'ibus' 'dbus' 'dbus-glib' 'dbus-python' 'python' 'python-pip' 'scrot' 'screenfetch' 'wget' 'cmatrix' 'gcc' 'htop' 'make' 'git' 'pciutils' 'acpi' 'acpid' 'unrar' 'p7zip' 'tar' 'rsync' 'ufw' 'iptables' 'openbsd-netcat' 'traceroute' 'nmap' 'iw' 'net-tools' 'networkmanager' 'dhclient' 'dhcpcd' 'neofetch' 'nano' 'alsa-plugins' 'alsa-utils' 'alsa-firmware' 'pulseaudio' 'pulseaudio-alsa' 'pavucontrol' 'volumeicon' 'bash-completion' 'zsh' 'zsh-syntax-highlighting' 'zsh-autosuggestions')
+FONTES_PKGS=('ttf-droid' 'noto-fonts' 'ttf-liberation' 'ttf-freefont' 'ttf-dejavu' 'ttf-hack' 'ttf-roboto' 'freetype2' 'terminus-font' 'ttf-bitstream-vera' 'ttf-dejavu' 'ttf-droid' 'ttf-fira-mono' 'ttf-fira-sans' 'ttf-freefont' 'ttf-inconsolata' 'ttf-liberation' 'ttf-linux-libertine' 'ttf-ubuntu-font-family' 'ttf-font-awesome' 'otf-font-awesome')
 
 ######## Variáveis auxiliares. NÃO DEVEM SER ALTERADAS
 BOOT_START=1
@@ -48,10 +57,14 @@ SWAP_END=$(($SWAP_START+$SWAP_SIZE))
 ROOT_START=$SWAP_END
 ROOT_END=$(($ROOT_START+$ROOT_SIZE))
 
-if [[ -d "/sys/firmware/efi/" ]]; then
-    SYSTEM="UEFI"
-else
-    SYSTEM="BIOS"
+# Check for UEFI
+if [ -d /sys/firmware/efi ]; then
+  UEFI=true
+fi
+
+# Check for bluetooth support
+if dmesg | grep -iq "blue"; then
+  bluetooth=true
 fi
 
 ######################################################################
@@ -67,7 +80,7 @@ Parted() {
     parted --script $HD "${1}"
 }
 automatic_particao() {
-    if [[ "$SYSTEM" -eq "UEFI" ]]; then
+    if $UEFI ; then
         # Configura o tipo da tabela de partições
         Parted "mklabel gpt"
         Parted "mkpart primary fat32 $BOOT_START $BOOT_END"
@@ -108,51 +121,13 @@ automatic_particao() {
     fi
     
     
-    if [[ "$SYSTEM" -eq "UEFI" ]]; then
+    if $UEFI ; then
         # Monta partição esp
         mkdir -p ${MOINTPOINT}/boot/efi && mount ${HD}1 ${MOINTPOINT}/boot/efi
     else
         # Monta partição boot
         mkdir -p ${MOINTPOINT}/boot && mount ${HD}1 ${MOINTPOINT}/boot
     fi
-}
-install_root() {
-    KERNEL=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)"  --title "$TITLE" --radiolist "Existem vários kernels disponíveis para o sistema.\n\nO mais comum é o atual kernel linux.\nEste kernel é o mais atualizado, oferecendo o melhor suporte de hardware.\nNo entanto, pode haver possíveis erros nesse kernel, apesar dos testes.\n\nO kernel linux-lts fornece um foco na estabilidade.\nEle é baseado em um kernel mais antigo, por isso pode não ter alguns recursos mais recentes.\n\nO kernel com proteção do linux é focado na segurança \nEle contém o Grsecurity Patchset e o PaX para aumentar a segurança. \n\nO kernel do linux-zen é o resultado de uma colaboração de hackers do kernel \npara fornecer o melhor kernel possível para os sistemas cotidianos. \n\nPor favor, selecione o kernel que você deseja instalar." 50 100 100 linux "" on linux-lts "" off linux-hardened "" off linux-zen "" off --stdout)
-    reflector --verbose --protocol http --protocol https --latest 20 --sort rate --save /etc/pacman.d/mirrorlist
-    [[ "$(uname -m)" = "x86_64" ]] && sed -i '/multilib\]/,+1 s/^#//' /etc/pacman.conf 
-    pacman -Sy && pacstrap $MOINTPOINT base base-devel ${KERNEL} ${KERNEL}-headers ${KERNEL}-firmware grub `echo $EXTRA_PKGS $FONTES_PKGS` 
-    
-    #### fstab
-    genfstab -U -p $MOINTPOINT >> ${MOINTPOINT}/etc/fstab
-
-    #### networkmanager acpi
-    arch_chroot "systemctl enable NetworkManager.service acpid.service ntpd.service"
-
-    cp /etc/pacman.d/mirrorlist ${MOINTPOINT}/etc/pacman.d/mirrorlist
-    [[ "$(uname -m)" = "x86_64" ]] && sed -i '/multilib\]/,+1 s/^#//' ${MOINTPOINT}/etc/pacman.conf
-    arch_chroot "pacman -Sy && pacman-key --init && pacman-key --populate archlinux"
-}
-
-install_bootloader() {
-    #### Install Bootloader
-    if [ "$(grep -m1 vendor_id /proc/cpuinfo | awk '{print $3}')" = "GenuineIntel" ]; then
-        pacstrap $MOINTPOINT intel-ucode
-    elif [ "$proc" = "AuthenticAMD" ]; then
-        pacstrap $MOINTPOINT amd-ucode
-    fi
-    
-    # Configura ambiente ramdisk inicial
-    arch_chroot "mkinitcpio -p ${KERNEL}"
-    if [[ "$SYSTEM" -eq "UEFI"  ]]; then
-        arch_chroot "pacman -S --noconfirm efibootmgr dosfstools mtools"
-        arch_chroot "grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB --recheck"
-        mkdir ${MOINTPOINT}/boot/efi/EFI/boot && mkdir ${MOINTPOINT}/boot/grub/locale
-        cp ${MOINTPOINT}/boot/efi/EFI/grub_uefi/grubx64.efi ${MOINTPOINT}/boot/efi/EFI/boot/bootx64.efi
-    else
-        arch_chroot "grub-install --target=i386-pc --recheck $HD"
-    fi
-    cp ${MOINTPOINT}/usr/share/locale/en@quot/LC_MESSAGES/grub.mo ${MOINTPOINT}/boot/grub/locale/en.mo
-    arch_chroot "grub-mkconfig -o /boot/grub/grub.cfg"
 }
 root_password() {
     rtpasswd=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Definir Senha ROOT " --inputbox "\nDigite a senha Root \n\n" 10 50 --stdout)
@@ -175,18 +150,7 @@ user_password() {
         USER_PASSWD=$(echo $userpasswd)
     fi
 }
-reboote(){
-    dialog --clear --title " Installation finished sucessfully " --yesno "\nDo you want to reboot?" 7 62
-    if [[ $? -eq 0 ]]; then
-        echo "System will reboot in a moment..."
-        sleep 3
-        # clear
-        umount -R $MOINTPOINT
-        reboot
-    fi
-}
-install_driver() {
-    install_driver_videos
+install_driver_virt() {
     #### auto-install VM drivers
     case $(systemd-detect-virt) in
       kvm)
@@ -218,95 +182,188 @@ install_driver_videos() {
         arch_chroot "pacman -S libva-intel-driver libvdpau-va-gl lib32-vulkan-intel vulkan-intel libva-intel-driver libva-utils lib32-mesa --needed --noconfirm"
     fi
 }
+# ------------------------------------
+config_install_root() {
 
-install_descktopmanager() {
-    arch_chroot "pacman -Sy xorg xorg-xkbcomp xorg-xinit xorg-server xorg-twm xorg-xclock xorg-xinit xorg-drivers xorg-xkill xorg-fonts-100dpi xorg-fonts-75dpi mesa xterm --noconfirm --needed"
+    #### Install Bootloader
+    if [ "$(grep -m1 vendor_id /proc/cpuinfo | awk '{print $3}')" = "GenuineIntel" ]; then
+        EXTRA_PKGS+=('intel-ucode')
+    elif [ "$proc" = "AuthenticAMD" ]; then
+        EXTRA_PKGS+=('amd-ucode')
+    fi
 
-    desktop=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "  " --menu "Desktop Environment" 15 50 50  1 "Gnome Minimal" 2 "Gnome" 3 "Plasma kde" 4 "cinnamon" 5 "xfce4" 6 "deepin" 7 "LXQt" 8 "Minimal"  --stdout)
-    case $desktop in
-        1)
-          DEpkg="gnome-shell gnome-backgrounds gnome-control-center gnome-screenshot gnome-system-monitor gnome-terminal gnome-tweak-tool nautilus gvfs gnome-calculator gnome-disk-utility"
-          ;;
-        2)
-          DEpkg="gnome gnome-tweak-tool "
-          ;;
-        3)
-         DEpkg="plasma plasma-nm dolphin plasma-wayland-session konsole kate kcalc ark gwenview spectacle okular packagekit-qt5 " 
-          ;;
-        4)
-          DEpkg="cinnamon sakura gnome-disk-utility nemo-fileroller gnome-software gnome-system-monitor gnome-screenshot network-manager-applet "
-          ;;
-        5)
-          DEpkg="xfce4 xfce4-goodies network-manager-applet file-roller "
-          ;;
-        6)
-          DEpkg="deepin deepin-extra ark gnome-disk-utility gedit "
-          ;;
-        7)
-          DEpkg="lxqt xdg-utils libpulse libstatgrab libsysstat lm_sensors network-manager-applet pavucontrol-qt "
-          ;;
-    esac
-    arch_chroot "pacman -Sy $DEpkg audacious pulseaudio pulseaudio-alsa pavucontrol xscreensaver archlinux-wallpaper xdg-user-dirs-gtk adwaita-icon-theme papirus-icon-theme oxygen-icons faenza-icon-theme --noconfirm --needed --asdeps"
-    
-    desktop=$(dialog  --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " login manager " --menu "Qual gerenciador de exibição você gostaria de usar?" 12 50 50 1 gdm 2 sddm 3 lxdm 4 lightdm --stdout )
-    case $desktop in
-        1)
-          arch_chroot "pacman -Sy gdm --noconfirm --needed --asdeps"
-          arch_chroot "systemctl enable gdm.service"
-          ;;
-        2)
-          arch_chroot "pacman -Sy sddm --noconfirm --needed --asdeps"
-          git clone https://github.com/Match-Yang/sddm-deepin.git ~/sddm-deepin && mv -r ~/sddm-deepin/deepin ${MOINTPOINT}/usr/share/sddm/themes/
-          git clone https://github.com/totoro-ghost/sddm-astronaut.git ${MOINTPOINT}/usr/share/sddm/themes/astronaut/
-          # sed -i "s/^Current=.*/Current=deepin/g" ${MOINTPOINT}/usr/lib/sddm/sddm.conf.d/default.conf
-          arch_chroot "systemctl enable sddm.service"
-          ;;
-        3)
-          arch_chroot "pacman -Sy lxdm --noconfirm --needed --asdeps"
-          arch_chroot "systemctl enable lxdm.service" 
-          ;;
-        4|*)
-          arch_chroot "pacman -Sy lightdm lightdm-gtk-greeter lightdm-webkit2-greeter --noconfirm --needed --asdeps"
-          git clone https://github.com/jelenis/login-manager.git ${MOINTPOINT}/usr/share/lightdm-webkit/themes/lightdm-theme
-          sed -i "s/^greeter-session=.*/greeter-session=lightdm-webkit2-greeter/g" ${MOINTPOINT}/etc/lightdm/lightdm.conf
-          sed -i "s/^webkit_theme=.*/webkit_theme=lightdm-theme/g" ${MOINTPOINT}/etc/lightdm/lightdm-webkit2-greeter.conf
-          arch_chroot "systemctl enable lightdm.service" 
-          ;;
-    esac
-    Install_app
+    [[ $UEFI ]] && EXTRA_PKGS+=('efibootmgr')
+    DESKTOP=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "Choose your Graphical Environment" --no-cancel --menu "Select the style of graphical environment you wish to \
+    use.\n\nGraphical environment:" 12 75 3 \
+    "Desktop Environment" "Traditional complete graphical user interface" \
+    "Window Manager" "Standalone minimal graphical user interface" \
+    "None" "Command-line only interface" --stdout)
+
+    if [ "$DESKTOP" != "None" ]; then
+        DEpkg+=('xorg' 'xorg-xkbcomp' 'xorg-xinit' 'xorg-server' 'xorg-twm' 'xorg-xclock' 'xorg-drivers' 'xorg-xkill' 'xorg-fonts-100dpi' 'xorg-fonts-75dpi' 'mesa' 'xterm' 'audacious' 'pulseaudio' 'pulseaudio-alsa' 'pavucontrol' 'xscreensaver' 'archlinux-wallpaper' 'xdg-user-dirs-gtk' 'adwaita-icon-theme' 'papirus-icon-theme' 'oxygen-icons' 'faenza-icon-theme')
+        
+        if [ "$DESKTOP" = "Desktop Environment" ]; then
+            GUI=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "Select a Desktop Environment" --menu "Select a desktop environment to install:" 15 65 8 \
+            "GNOME" "Modern MiNIMAL simplicity focused desktop" \
+            "KDE Plasma" "Full featured QT based desktop" \
+            "Deepin" "Deepin desktop with extra software" \
+            "Cinnamon" "Traditional desktop experience" \
+            "LXDE" "Lightweight and efficient desktop" \
+            "LXQT" "Lightweight and efficient QT based desktop" \
+            "Xfce" "Lightweight and modular desktop"  --stdout)
+        elif [ "$DESKTOP" = "Window Manager" ]; then    
+            GUI=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "Select a Window Manager" --menu "Select a window manager to install:" 13 75 6 \
+            "awesome" "Highly configurable, dynamic window manager" \
+            "i3" "Dynamic tiling window manager inspired by wmii" \
+            "Openbox" "Highly configurable, stacking window manager" \
+            "xmonad" "Dynamic tiling window manager configured in Haskell" --stdout)
+        fi
+
+        case $GUI in
+            "GNOME") DEpkg+=('gnome-shell' 'gnome-backgrounds' 'gnome-control-center' 'gnome-screenshot' gnome-system-monitor gnome-terminal gnome-tweak-tool nautilus gvfs gnome-calculator gnome-disk-utility) ;;
+            "KDE Plasma") DEpkg+=('plasma' 'dolphin' 'plasma-wayland-session' 'konsole' 'kate' 'kcalc' 'ark' 'gwenview' 'spectacle' 'okular' 'packagekit-qt5') ;;
+            "Cinnamon") DEpkg+=('cinnamon' 'sakura' 'gnome-disk-utility' 'nemo-fileroller' 'gnome-software' 'gnome-system-monitor' 'gnome-screenshot') ;;
+            "Xfce") DEpkg=('xfce4' 'xfce4-goodies' 'file-roller') ;;
+            "Deepin") DEpkg+=('plocate' 'lm_sensors' 'gvfs' 'gvfs-mtp' 'sysstat' 'deepin-picker' 'ntp' 'exfat-utils' 'deepin-community-wallpapers' 'qalculate-gtk' 'kodi-x11' 'deepin-control-center' 'deepin-kwin'  'deepin-shortcut-viewer' 'deepin-system-monitor' 'deepin-turbo' 'fractal' 'deepin-terminal-gtk' 'deepin-reader' 'deepin-editor' 'firefox' 'thunderbird' 'telegram-desktop' 'deepin-music' 'deepin-screenshot' 'deepin-compressor' 'deepin-printer' 'qbittorrent' 'deepin-image-viewer' 'deepin-album' 'kodi' 'simplescreenrecorder' 'guvcview-qt' 'aria2' 'pdfarranger' 'bpytop' 'git' 'wget' 'neofetch' 'nano' 'reflector' 'p7zip' 'unarchiver' 'sharutils' 'youtube-dl' 'mesa-demos' 'tree' 'bind-tools' 'dmidecode' 'hddtemp' 'jshon' 'expac' 'cups' 'cups-pdf' 'xorg-xinit' 'inetutils' 'keepassxc' 'flatpak' 'speedtest-cli' 'wavemon' 'cronie' 'uget' 'python-sip' 'usbutils' 'bash-completion' 'pacman-contrib' 'unarj' 'cpio' ) ;; # =('deepin' 'deepin-extra' 'ark' 'gnome-disk-utility') ;;
+            "LXDE") DEpkg+=('lxde') ;;
+            "LXQT") DEpkg=('lxqt' 'xdg-utils' 'libpulse' 'libstatgrab' 'libsysstat' 'lm_sensors' 'pavucontrol-qt') ;;
+            "awesome") DEpkg+=('awesome') ;;
+            "i3") DEpkg+=('i3') ;;
+            "Openbox") DEpkg+=('openbox') ;;
+            "xmonad") DEpkg+=('xmonad' 'xmonad-contrib') ;;
+        esac
+
+        if [ "$GUI" != "GNOME" ]; then
+            if [ "$GUI" = "KDE Plasma" ]; then
+                DEpkg+=('plasma-nm')
+            else
+                DEpkg+=('network-manager-applet' 'gnome-keyring')
+            fi
+        fi
+
+        DM=$(dialog  --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)"  --title "Install a Display Manager" --menu "Select a display manager to install:" 10 50 3 "gdm" "GNOME Display Manager" "lightdm" "Lightweight Display Manager" "sddm" "Simple Desktop Display Manager" --stdout)
+        if [ $? -eq 0 ]; then
+            dm_enabled=true
+            case "$DM" in
+                "gdm") DEpkg+=('gdm') ;;
+                "lxdm ") DEpkg+=('lxdm') ;;
+                "lightdm") DEpkg+=('lightdm' 'lightdm-gtk-greeter' 'lightdm-gtk-greeter-settings') ;;
+                "sddm") DEpkg+=('sddm') ;;
+            esac
+        else
+            case "$GUI" in
+                "Cinnamon") xinit_config="exec cinnamon-session" ;;
+                "Deepin")   xinit_config="exec startdde" ;;
+                "GNOME") xinit_config="exec gnome-session" ;;
+                "KDE Plasma") xinit_config="exec startkde" ;;
+                "LXDE") xinit_config="exec startlxde" ;;
+                "LXQT") xinit_config="exec startlxqt" ;;
+                "Xfce") xinit_config="exec startxfce4" ;;
+                "awesome") xinit_config="exec awesome" ;;
+                "bspwm") xinit_config="sxhkd & ; exec bspwm" ;;
+                "Fluxbox") xinit_config="exec startfluxbox" ;;
+                "i3") xinit_config="exec i3" ;;
+                "Openbox") xinit_config="exec openbox-session" ;;
+                "xmonad") xinit_config="exec xmonad" ;;
+            esac
+        fi
+
+        if $bluetooth; then
+            bluetooth_enabled=true
+            DEpkg+=('bluez' 'bluez-utils' 'pulseaudio-bluetooth')
+            dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "Install Bluetooth Manager" --yesno "Would you like to install a graphical Bluetooth manager?\n\nThe utility that best integrates with the desktop environment you selected will be installed." 8 60
+            if [ $? -eq 0 ]; then
+                case "$GUI" in
+                    "GNOME") DEpkg+=('gnome-bluetooth') ;;
+                    "Cinnamon") DEpkg+=('blueberry') ;;
+                    "KDE Plasma") DEpkg+=('bluedevil') ;;
+                    *) DEpkg+=('blueman') ;;
+                esac
+            fi
+        fi
+    fi
+
+    # git clone https://github.com/Match-Yang/sddm-deepin.git ~/sddm-deepin && mv -r ~/sddm-deepin/deepin ${MOINTPOINT}/usr/share/sddm/themes/
+    # git clone https://github.com/totoro-ghost/sddm-astronaut.git ${MOINTPOINT}/usr/share/sddm/themes/astronaut/
+    # sed -i "s/^Current=.*/Current=deepin/g" ${MOINTPOINT}/usr/lib/sddm/sddm.conf.d/default.conf
+
+    # git clone https://github.com/jelenis/login-manager.git ${MOINTPOINT}/usr/share/lightdm-webkit/themes/lightdm-theme
+    # sed -i "s/^greeter-session=.*/greeter-session=lightdm-webkit2-greeter/g" ${MOINTPOINT}/etc/lightdm/lightdm.conf
+    # sed -i "s/^webkit_theme=.*/webkit_theme=lightdm-theme/g" ${MOINTPOINT}/etc/lightdm/lightdm-webkit2-greeter.conf
 }
+install_root() {
+    pacstrap $MOINTPOINT "${BASE_PACKAGES[@]}" ${KERNEL} ${KERNEL}-headers ${KERNEL}-firmware "${EXTRA_PKGS[@]}" "${FONTES_PKGS[@]}" "${DEpkg[@]}"
+}
+config_base() {
+    cp /etc/pacman.d/mirrorlist ${MOINTPOINT}/etc/pacman.d/mirrorlist
+    [[ "$(uname -m)" = "x86_64" ]] && sed -i '/multilib\]/,+1 s/^#//' ${MOINTPOINT}/etc/pacman.conf
+    arch_chroot "pacman -Sy && pacman-key --init && pacman-key --populate archlinux"
 
-Install_app() {
-    cmd=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Menu " --output-fd 1 --separate-output --extra-button --extra-label 'Select All' --cancel-label 'Select None' --checklist 'Choose the tools to install:' 0 0 0 --stdout)
-    app () {
-        options=(
-            'tilix' '' on
-            'vlc' ''  off
-            'libreoffice-fresh' '' off
-            'lollypop' '' off
-            'atom' '' off
-            'gedit' '' off
-            'mousepad' '' off
-            'leafpad' '' on
-            'chromium' '' off
-            'midori' ''  off
-            'firefox' '' on
-            'brave' '' off
-            'nodejs' '' off
-            'npm' '' off
-            'yarn' '' off
-            'gimp' '' off
-            'jre8-openjdk' '' on 
-            'jre8-openjdk-headless' '' off
-        )
-        PKGS=$("${cmd[@]}" "${options[@]}")
-    }
-    app
+    #### setting hostname
+    echo ${HNAME} > ${MOINTPOINT}/etc/hostname
+    echo -e "127.0.0.1    localhost.localdomain    localhost\n::1        localhost.localdomain    localhost\n127.0.1.1    $HNAME.localdomain    $HNAME" >> ${MOINTPOINT}/etc/hosts
+
+    #### locales setting locale pt_BR.UTF-8 UTF-8
+    echo -e "LANG=${LOCALE}\nLC_MESSAGES=${LOCALE}" > ${MOINTPOINT}/etc/locale.conf
+    sed -i "s/#${LOCALE}/${LOCALE}/" ${MOINTPOINT}/etc/locale.gen
+    arch_chroot "locale-gen"
+    arch_chroot "export LANG=${LOCALE}"
+
+    #### virtual console keymap
+    echo -e "KEYMAP=${KEYMAP}\nFONT=${FONT}" > ${MOINTPOINT}/etc/vconsole.conf
+
+    #### Setting timezone
+    arch_chroot "ln -s /usr/share/zoneinfo/${ZONE}/${SUBZONE} /etc/localtime"
+
+    #### Setting hw CLOCK
+    arch_chroot "hwclock --systohc --${CLOCK}"
+
+    #### root password
+    arch_chroot "echo -e $ROOT_PASSWD'\n'$ROOT_PASSWD | passwd"
+
+    #### criar usuario Definir senha do usuário 
+    arch_chroot "useradd -m -g users -G adm,lp,wheel,power,audio,video -s /bin/bash ${USER}"
+    arch_chroot "echo -e $USER_PASSWD'\n'$USER_PASSWD | passwd `echo $USER`"
+
+    # ativando DM
+    if [[ $dm_enabled ]] ; then
+        arch_chroot "systemctl enable ${DM}.service"
+    else
+        echo "$xinit_config" > ${MOINTPOINT}/home/"$USER"/.xinitrc
+    fi
+
+    #### fstab
+    genfstab -U -p $MOINTPOINT >> ${MOINTPOINT}/etc/fstab
+
+    #### networkmanager acpi
+    arch_chroot "systemctl enable NetworkManager.service acpid.service ntpd.service"
     
-    for PKG in "${PKGS[@]}"; do
-        echo "INSTALLING: ${PKG}"
-        arch_chroot "pacman -Sy "$PKG" --noconfirm --needed"
-    done  
+    install_driver_virt
+    install_driver_videos
+
+    # Configura ambiente ramdisk inicial
+    arch_chroot "mkinitcpio -p ${KERNEL}"
+}
+install_bootloader() {
+    if [[ "$SYSTEM" -eq "UEFI"  ]]; then
+        arch_chroot "grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB --recheck"
+        mkdir ${MOINTPOINT}/boot/efi/EFI/boot && mkdir ${MOINTPOINT}/boot/grub/locale
+        cp ${MOINTPOINT}/boot/efi/EFI/grub_uefi/grubx64.efi ${MOINTPOINT}/boot/efi/EFI/boot/bootx64.efi
+    else
+        arch_chroot "grub-install --target=i386-pc --recheck $HD"
+    fi
+    cp ${MOINTPOINT}/usr/share/locale/en@quot/LC_MESSAGES/grub.mo ${MOINTPOINT}/boot/grub/locale/en.mo
+    arch_chroot "grub-mkconfig -o /boot/grub/grub.cfg"
+}
+reboote(){
+    dialog --clear --title " Installation finished sucessfully " --yesno "\nDo you want to reboot?" 7 62
+    if [[ $? -eq 0 ]]; then
+        echo "System will reboot in a moment..."
+        sleep 3
+        # clear
+        umount -R $MOINTPOINT
+        reboot
+    fi
 }
 
 ######################################################################
@@ -315,17 +372,15 @@ Install_app() {
 ##                                                                  ##
 ######################################################################
 
+reflector --verbose --protocol http --protocol https --latest 20 --sort rate --save /etc/pacman.d/mirrorlist
+[[ "$(uname -m)" = "x86_64" ]] && sed -i '/multilib\]/,+1 s/^#//' /etc/pacman.conf && pacman -Sy
+
 timedatectl set-ntp true
 [[ $FONT != "" ]] && setfont $FONT
 loadkeys $KEYMAP  # br-abnt2
 
-#### Particionamento esta configurado para usar todo o hd
-automatic_particao
-
-#### Instalcao
-install_root
-install_driver
-install_bootloader
+#
+KERNEL=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)"  --title "$TITLE" --radiolist "Existem vários kernels disponíveis para o sistema.\n\nO mais comum é o atual kernel linux.\nEste kernel é o mais atualizado, oferecendo o melhor suporte de hardware.\nNo entanto, pode haver possíveis erros nesse kernel, apesar dos testes.\n\nO kernel linux-lts fornece um foco na estabilidade.\nEle é baseado em um kernel mais antigo, por isso pode não ter alguns recursos mais recentes.\n\nO kernel com proteção do linux é focado na segurança \nEle contém o Grsecurity Patchset e o PaX para aumentar a segurança. \n\nO kernel do linux-zen é o resultado de uma colaboração de hackers do kernel \npara fornecer o melhor kernel possível para os sistemas cotidianos. \n\nPor favor, selecione o kernel que você deseja instalar." 50 100 100 linux "" on linux-lts "" off linux-hardened "" off linux-zen "" off --stdout)
 
 #### configure base system
 LOCALE=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Definir a Localização do Sistema " --menu "A localização (locale) determina o idioma a ser exibido, os formatos de data e hora, etc...\n\nO formato é idioma_PAÍS (ex.: en_US é inglês, Estados Unidos; pt_PT é português, Portugal)." 0 0 12 $(cat /etc/locale.gen | grep -v "#  " | sed 's/#//g' | sed 's/ UTF-8//g' | grep .UTF-8 | sort | awk '{ printf $0 " - " }') --stdout)
@@ -346,41 +401,24 @@ root_password
 USER=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Criar Novo Usuário " --inputbox "\nDigite o nome do usuário. As letras DEVEM ser minúsculas.\n" 10 50 --stdout)
 user_password
 
-#### setting hostname
-echo ${HNAME} > ${MOINTPOINT}/etc/hostname
-echo -e "127.0.0.1    localhost.localdomain    localhost\n::1        localhost.localdomain    localhost\n127.0.1.1    $HNAME.localdomain    $HNAME" >> ${MOINTPOINT}/etc/hosts
+#### Particionamento esta configurado para usar todo o hd
+automatic_particao
 
-#### locales setting locale pt_BR.UTF-8 UTF-8
-echo -e "LANG=${LOCALE}\nLC_MESSAGES=${LOCALE}" > ${MOINTPOINT}/etc/locale.conf
-sed -i "s/#${LOCALE}/${LOCALE}/" ${MOINTPOINT}/etc/locale.gen
-arch_chroot "locale-gen"
-arch_chroot "export LANG=${LOCALE}"
+#### Instalcao
+config_install_root
+install_root
+config_base
+install_bootloader
 
-#### virtual console keymap
-echo -e "KEYMAP=${KEYMAP}\nFONT=${FONT}" > ${MOINTPOINT}/etc/vconsole.conf
+# #### yay e powerlevel10k
+# git clone https://aur.archlinux.org/yay.git ${MOINTPOINT}/home/${USER}
+# git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${MOINTPOINT}/home/${USER}/.powerlevel10k
+# # arch_chroot "chsh -s /usr/bin/zsh"
 
-#### Setting timezone
-arch_chroot "ln -s /usr/share/zoneinfo/${ZONE}/${SUBZONE} /etc/localtime"
-
-#### Setting hw CLOCK
-arch_chroot "hwclock --systohc --${CLOCK}"
-
-#### root password
-arch_chroot "echo -e $ROOT_PASSWD'\n'$ROOT_PASSWD | passwd"
-
-#### criar usuario Definir senha do usuário 
-arch_chroot "useradd -m -g users -G adm,lp,wheel,power,audio,video -s /bin/bash ${USER}"
-arch_chroot "echo -e $USER_PASSWD'\n'$USER_PASSWD | passwd `echo $USER`"
-
-#### yay e powerlevel10k
-git clone https://aur.archlinux.org/yay.git ${MOINTPOINT}/home/${USER}
-git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${MOINTPOINT}/home/${USER}/.powerlevel10k
-# arch_chroot "chsh -s /usr/bin/zsh"
-
-#### configure base system
-dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "INTEFACE GRAFICA" --clear --yesno "\nDeseja Instalar Windows Manager ?" 7 50
-if [[ $? -eq 0 ]]; then
-    install_descktopmanager
-fi
+# #### configure base system
+# dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "INTEFACE GRAFICA" --clear --yesno "\nDeseja Instalar Windows Manager ?" 7 50
+# if [[ $? -eq 0 ]]; then
+#     install_descktopmanager
+# fi
 
 # reboote
