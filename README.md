@@ -41,3 +41,4 @@ cd ~ && rm -rf yay
 ```
 yay -S --noconfirm --needed  chrome-gnome-shell gnome-shell-extension-dash-to-dock 
 ```
+
