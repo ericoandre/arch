@@ -89,31 +89,29 @@ automatic_particao() {
         Parted "set 1 bios_grub on"
         mkfs.$BOOT_FS ${DISK}1
     fi
-    
-    dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Criar Swap " --clear --yesno "\nCriar memoria de paginação Swap em arquivo?" 7 50
-    if [[ $? -eq 1 ]]; then
-      # Cria partição swap
-      parted -s $DISK mkpart primary linux-swap $SWAP_START $SWAP_END
-      Parted "mkpart primary $ROOT_FS $ROOT_START -$ROOT_END"
 
-      mkswap ${DISK}2
-      swapon ${DISK}2
+    if $SWAPFILE ; then
+        Parted "mkpart primary $ROOT_FS $BOOT_END ${ROOT_END}"
 
-      # Formatando partição root
-      mkfs.$ROOT_FS ${DISK}3 -L Root
-      mount ${DISK}3 $MOINTPOINT
-    else
-      Parted "mkpart primary $ROOT_FS $BOOT_END -${ROOT_END}"
+        # Formatando partição root
+        mkfs.$ROOT_FS ${DISK}2 -L Root
+        mount ${DISK}2 $MOINTPOINT
 
-      # Formatando partição root
-      mkfs.$ROOT_FS ${DISK}2 -L Root
-      mount ${DISK}2 $MOINTPOINT
+        mkdir -p  ${MOINTPOINT}/opt/swap && touch ${MOINTPOINT}/opt/swap/swapfile
+        dd if=/dev/zero of=${MOINTPOINT}/opt/swap/swapfile bs=1M count=$SWAP_SIZE status=progress
+        chmod 600 ${MOINTPOINT}/opt/swap/swapfile
+        mkswap ${MOINTPOINT}/opt/swap/swapfile
+        swapon ${MOINTPOINT}/opt/swap/swapfile
+    else 
+        # Cria partição swap
+        parted -s $DISK mkpart primary linux-swap $SWAP_START $SWAP_END
+        Parted "mkpart primary $ROOT_FS $ROOT_START ${ROOT_END}"
 
-      mkdir -p  ${MOINTPOINT}/opt/swap && touch ${MOINTPOINT}/opt/swap/swapfile
-      dd if=/dev/zero of=${MOINTPOINT}/opt/swap/swapfile bs=1M count=$SWAP_SIZE status=progress
-      chmod 600 ${MOINTPOINT}/opt/swap/swapfile
-      mkswap ${MOINTPOINT}/opt/swap/swapfile
-      swapon ${MOINTPOINT}/opt/swap/swapfile
+        mkswap ${DISK}2
+        swapon ${DISK}2
+        # Formatando partição root
+        mkfs.${ROOT_FS} ${DISK}3 -L Root
+        mount ${DISK}3 ${MOINTPOINT}
     fi
     
     if $UEFI ; then
@@ -124,6 +122,7 @@ automatic_particao() {
         mkdir -p ${MOINTPOINT}/boot && mount ${DISK}1 ${MOINTPOINT}/boot
     fi
 }
+
 install_driver_videos() {
     gpu_type=$(lspci)
     if grep -E "NVIDIA|GeForce" <<< ${gpu_type}; then
@@ -391,15 +390,13 @@ reboote(){
 ######################################################################
 
 timedatectl set-ntp true
-reflector --verbose --protocol http --protocol https --latest 20 --sort rate --save /etc/pacman.d/mirrorlist
-[[ "$(uname -m)" = "x86_64" ]] && sed -i '/multilib\]/,+1 s/^#//' /etc/pacman.conf
-pacman -Sy --noconfirm dialog terminus-font reflector 
+# reflector --verbose --protocol http --protocol https --latest 20 --sort rate --save /etc/pacman.d/mirrorlist
+# [[ "$(uname -m)" = "x86_64" ]] && sed -i '/multilib\]/,+1 s/^#//' /etc/pacman.conf
+# pacman -Sy --noconfirm dialog terminus-font reflector 
 # pacman-key --init && pacman-key --populate archlinux
 
 dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Criar Swap " --clear --yesno "\nCriar memoria de paginação Swap em arquivo?" 7 50
-if [[ $? -eq 1 ]]; then
-  SWAPFILE=true
-fi
+[[ $? -eq 1 ]] && SWAPFILE=true
 
 KERNEL=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)"  --title "$TITLE" --radiolist "Existem vários kernels disponíveis para o sistema.\n\nO mais comum é o atual kernel linux.\nEste kernel é o mais atualizado, oferecendo o melhor suporte de hardware.\nNo entanto, pode haver possíveis erros nesse kernel, apesar dos testes.\n\nO kernel linux-lts fornece um foco na estabilidade.\nEle é baseado em um kernel mais antigo, por isso pode não ter alguns recursos mais recentes.\n\nO kernel com proteção do linux é focado na segurança \nEle contém o Grsecurity Patchset e o PaX para aumentar a segurança. \n\nO kernel do linux-zen é o resultado de uma colaboração de hackers do kernel \npara fornecer o melhor kernel possível para os sistemas cotidianos. \n\nPor favor, selecione o kernel que você deseja instalar." 50 100 100 linux "" on linux-lts "" off linux-hardened "" off linux-zen "" off --stdout)
 
@@ -424,10 +421,7 @@ USER=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Criar 
 user_password
 
 #### Particionamento esta configurado para usar todo o hd
-# automatic_particao
-
-mount ${DISK}3 $MOINTPOINT
-mount ${DISK}1 ${MOINTPOINT}/boot/efi
+automatic_particao
 
 #### Instalcao
 config_install
