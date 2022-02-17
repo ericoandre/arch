@@ -293,7 +293,7 @@ config_base() {
         # Configura locale.gen
         echo "locale.gen"
         sed -i "s/#${LOCALE}/${LOCALE}/" ${MOINTPOINT}/etc/locale.gen || ERR=1
-        arch_chroot "locale-gen"  || ERR=1
+        arch_chroot "locale-gen" 
         arch_chroot "export LANG=${LOCALE}"
 
         # Configura layout do teclado
@@ -340,12 +340,12 @@ install_boot_grub() {
         echo "Boot Grub"
         if $UEFI ; then
                 arch_chroot "grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB --recheck"
-                mkdir ${MOINTPOINT}/boot/efi/EFI/boot 
+                [[ -d ${MOINTPOINT}/boot/efi/EFI/boot ]] &&  echo "Directory EFI/boot found." || mkdir ${MOINTPOINT}/boot/efi/EFI/boot 
                 cp ${MOINTPOINT}/boot/efi/EFI/GRUB/grubx64.efi ${MOINTPOINT}/boot/efi/EFI/boot/bootx64.efi
         else
-                arch_chroot "grub-install --target=i386-pc --recheck $DISK"
+                arch_chroot "grub-install --target=i386-pc --recheck $HD"
         fi
-        mkdir ${MOINTPOINT}/boot/grub/locale
+        [[ -d ${MOINTPOINT}/boot/grub/locale ]] &&  echo "Directory grub/locale found." || mkdir ${MOINTPOINT}/boot/grub/locale
         cp ${MOINTPOINT}/usr/share/locale/en@quot/LC_MESSAGES/grub.mo ${MOINTPOINT}/boot/grub/locale/en.mo
         arch_chroot "grub-mkconfig -o /boot/grub/grub.cfg"
 }
