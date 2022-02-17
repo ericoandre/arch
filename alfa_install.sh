@@ -331,6 +331,8 @@ config_base() {
         echo "ramdisk inicial"
         arch_chroot "mkinitcpio -p ${KERNEL}"
 
+
+        echo "fim ${ERR}"
         if [[ $ERR -eq 1 ]]; then
                 echo "Erro ao config base ${KERNEL}"
                 exit 1
