@@ -27,7 +27,7 @@ KERNEL=linux
 #
 dm_enabled=false
 bluetooth_enabled=false
-DESKTOP=false
+DESKTOP="None"
 GUI=false
 UEFI=false
 DEpkg=()
@@ -120,7 +120,6 @@ automatic_particao() {
       swapon ${MOINTPOINT}/opt/swap/swapfile
     fi
     
-    
     if $UEFI ; then
         # Monta partição esp
         mkdir -p ${MOINTPOINT}/boot/efi && mount ${HD}1 ${MOINTPOINT}/boot/efi
@@ -129,6 +128,7 @@ automatic_particao() {
         mkdir -p ${MOINTPOINT}/boot && mount ${HD}1 ${MOINTPOINT}/boot
     fi
 }
+
 root_password() {
     rtpasswd=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Definir Senha ROOT " --inputbox "\nDigite a senha Root \n\n" 10 50 --stdout)
     rtpasswd2=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Definir Senha ROOT " --inputbox "\nDigite novamente a senha Root \n\n" 10 50 --stdout)
@@ -150,6 +150,7 @@ user_password() {
         USER_PASSWD=$(echo $userpasswd)
     fi
 }
+
 install_driver_virt() {
     #### auto-install VM drivers
     case $(systemd-detect-virt) in
@@ -169,6 +170,7 @@ install_driver_virt() {
     esac
     pacstrap /mnt xf86-input-synaptics synaptic
 }
+
 install_driver_videos() {
     gpu_type=$(lspci)
     if grep -E "NVIDIA|GeForce" <<< ${gpu_type}; then
@@ -201,7 +203,6 @@ config_install_root() {
 
     if [ "$DESKTOP" != "None" ]; then
         DEpkg+=('xorg' 'xorg-xkbcomp' 'xorg-xinit' 'xorg-server' 'xorg-twm' 'xorg-xclock' 'xorg-drivers' 'xorg-xkill' 'xorg-fonts-100dpi' 'xorg-fonts-75dpi' 'mesa' 'xterm' 'audacious' 'pulseaudio' 'pulseaudio-alsa' 'pavucontrol' 'xscreensaver' 'archlinux-wallpaper' 'xdg-user-dirs-gtk' 'adwaita-icon-theme' 'papirus-icon-theme' 'oxygen-icons' 'faenza-icon-theme')
-        
         if [ "$DESKTOP" = "Desktop Environment" ]; then
             GUI=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "Select a Desktop Environment" --menu "Select a desktop environment to install:" 15 65 8 \
             "GNOME" "Modern MiNIMAL simplicity focused desktop" \
@@ -218,7 +219,6 @@ config_install_root() {
             "Openbox" "Highly configurable, stacking window manager" \
             "xmonad" "Dynamic tiling window manager configured in Haskell" --stdout)
         fi
-
         case $GUI in
             "GNOME") DEpkg+=('gnome-shell' 'gnome-backgrounds' 'gnome-control-center' 'gnome-screenshot' gnome-system-monitor gnome-terminal gnome-tweak-tool nautilus gvfs gnome-calculator gnome-disk-utility) ;;
             "KDE Plasma") DEpkg+=('plasma' 'dolphin' 'plasma-wayland-session' 'konsole' 'kate' 'kcalc' 'ark' 'gwenview' 'spectacle' 'okular' 'packagekit-qt5') ;;
@@ -240,7 +240,6 @@ config_install_root() {
                 DEpkg+=('network-manager-applet' 'gnome-keyring')
             fi
         fi
-
         DM=$(dialog  --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)"  --title "Install a Display Manager" --menu "Select a display manager to install:" 10 50 3 "gdm" "GNOME Display Manager" "lightdm" "Lightweight Display Manager" "sddm" "Simple Desktop Display Manager" --stdout)
         if [ $? -eq 0 ]; then
             dm_enabled=true
@@ -282,14 +281,6 @@ config_install_root() {
             fi
         fi
     fi
-
-    # git clone https://github.com/Match-Yang/sddm-deepin.git ~/sddm-deepin && mv -r ~/sddm-deepin/deepin ${MOINTPOINT}/usr/share/sddm/themes/
-    # git clone https://github.com/totoro-ghost/sddm-astronaut.git ${MOINTPOINT}/usr/share/sddm/themes/astronaut/
-    # sed -i "s/^Current=.*/Current=deepin/g" ${MOINTPOINT}/usr/lib/sddm/sddm.conf.d/default.conf
-
-    # git clone https://github.com/jelenis/login-manager.git ${MOINTPOINT}/usr/share/lightdm-webkit/themes/lightdm-theme
-    # sed -i "s/^greeter-session=.*/greeter-session=lightdm-webkit2-greeter/g" ${MOINTPOINT}/etc/lightdm/lightdm.conf
-    # sed -i "s/^webkit_theme=.*/webkit_theme=lightdm-theme/g" ${MOINTPOINT}/etc/lightdm/lightdm-webkit2-greeter.conf
 }
 install_root() {
     pacstrap $MOINTPOINT "${BASE_PACKAGES[@]}" ${KERNEL} ${KERNEL}-headers ${KERNEL}-firmware "${EXTRA_PKGS[@]}" "${FONTES_PKGS[@]}" "${DEpkg[@]}"
@@ -339,13 +330,13 @@ config_base() {
     arch_chroot "systemctl enable NetworkManager.service acpid.service ntpd.service"
     
     install_driver_virt
-    install_driver_videos
+    [[ "$DESKTOP" != "None" ]] && install_driver_videos
 
     # Configura ambiente ramdisk inicial
     arch_chroot "mkinitcpio -p ${KERNEL}"
 }
 install_bootloader() {
-    if [[ "$SYSTEM" -eq "UEFI"  ]]; then
+    if $UEFI ; then
         arch_chroot "grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB --recheck"
         mkdir ${MOINTPOINT}/boot/efi/EFI/boot && mkdir ${MOINTPOINT}/boot/grub/locale
         cp ${MOINTPOINT}/boot/efi/EFI/grub_uefi/grubx64.efi ${MOINTPOINT}/boot/efi/EFI/boot/bootx64.efi

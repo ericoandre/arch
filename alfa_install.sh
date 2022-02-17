@@ -11,9 +11,10 @@ VERSION="Arch Linux Installer"
 
 # 
 UEFI=false
-
 bluetooth_enabled=false
 dm_enabled=false
+DESKTOP="None"
+GUI=false
 DESKTOP_PACKAGES=()
 
 BASE_PACKAGES=('base' 'base-devel' 'grub' 'archlinux-keyring' 'networkmanager' 'dhclient' 'dhcpcd' 'sudo'  'nano')
@@ -21,10 +22,6 @@ BASE_EXTRAS=('ibus' 'dbus-glib' 'dbus-python' 'go' 'python' 'python-pip' 'unrar'
 
 DESKTOP_DEFAULTS=('tilix' 'nodejs' 'npm' 'yarn' 'libreoffice-fresh' 'vlc' 'lollypop' 'firefox' 'leafpad' 'adwaita-icon-theme' 'papirus-icon-theme' 'oxygen-icons' 'faenza-icon-theme' 'breeze-icons' 'firefox' 'xscreensaver' 'cmatrix' 'archlinux-wallpaper' 'xdg-user-dirs-gtk' 'audacious' 'xorg' 'xorg-xkbcomp' 'xorg-xinit' 'xorg-server' 'xorg-twm' 'xorg-xclock' 'xorg-drivers' 'xorg-xkill' 'xorg-fonts-100dpi' 'xorg-fonts-75dpi' 'xorg-xfontsel' 'mesa' 'xterm' )
  
-# 'chromium' 'midori'  
-# 'gedit' 'mousepad'  
-# 'gimp'  
-
 # Config Suport
 KERNEL=linux
 CURR_LOCALE=pt_BR.UTF-8
@@ -35,9 +32,6 @@ ZONE=America
 SUBZONE=Recife
 CLOCK=utc
 HNAME=ArchVM
-
-DESKTOP=false
-GUI=false
 
 # Installation
 MOINTPOINT=/mnt
@@ -95,9 +89,21 @@ automatic_particao() {
         Parted "set 1 bios_grub on"
         mkfs.$BOOT_FS ${DISK}1
     fi
-  
-   if $SWAPFILE ; then
-      Parted "mkpart primary $ROOT_FS $BOOT_END ${ROOT_END}"
+    
+    dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Criar Swap " --clear --yesno "\nCriar memoria de paginação Swap em arquivo?" 7 50
+    if [[ $? -eq 1 ]]; then
+      # Cria partição swap
+      parted -s $DISK mkpart primary linux-swap $SWAP_START $SWAP_END
+      Parted "mkpart primary $ROOT_FS $ROOT_START -$ROOT_END"
+
+      mkswap ${DISK}2
+      swapon ${DISK}2
+
+      # Formatando partição root
+      mkfs.$ROOT_FS ${DISK}3 -L Root
+      mount ${DISK}3 $MOINTPOINT
+    else
+      Parted "mkpart primary $ROOT_FS $BOOT_END -${ROOT_END}"
 
       # Formatando partição root
       mkfs.$ROOT_FS ${DISK}2 -L Root
@@ -108,20 +114,7 @@ automatic_particao() {
       chmod 600 ${MOINTPOINT}/opt/swap/swapfile
       mkswap ${MOINTPOINT}/opt/swap/swapfile
       swapon ${MOINTPOINT}/opt/swap/swapfile
-   else 
-      
-      # Cria partição swap
-      parted -s $DISK mkpart primary linux-swap $SWAP_START $SWAP_END
-      Parted "mkpart primary $ROOT_FS $ROOT_START ${ROOT_END}"
-
-      mkswap ${DISK}2
-      swapon ${DISK}2
-
-      # Formatando partição root
-      mkfs.${ROOT_FS} ${DISK}3 -L Root
-      mount ${DISK}3 ${MOINTPOINT}
     fi
-    
     
     if $UEFI ; then
         # Monta partição esp
@@ -131,7 +124,6 @@ automatic_particao() {
         mkdir -p ${MOINTPOINT}/boot && mount ${DISK}1 ${MOINTPOINT}/boot
     fi
 }
-
 install_driver_videos() {
     gpu_type=$(lspci)
     if grep -E "NVIDIA|GeForce" <<< ${gpu_type}; then
@@ -279,11 +271,13 @@ config_install() {
     fi
 }
 install_base() {
-    pacstrap $MOINTPOINT "${BASE_PACKAGES[@]}" ${KERNEL} ${KERNEL}-headers ${KERNEL}-firmware grub "${BASE_EXTRAS[@]}"
-    arch_chroot "pacman -Sy && pacman-key --init && pacman-key --populate archlinux"
-    pacstrap $MOINTPOINT "${DESKTOP_PACKAGES[@]}"
+    pacstrap $MOINTPOINT "${BASE_PACKAGES[@]}" ${KERNEL} ${KERNEL}-headers ${KERNEL}-firmware grub "${BASE_EXTRAS[@]} ${DESKTOP_PACKAGES[@]}"
 }
+
 config_base() {
+    ### 
+    arch_chroot "timedatectl set-ntp true && loadkeys $KEYMAP"
+
     #### fstab
     genfstab -U -p $MOINTPOINT >> ${MOINTPOINT}/etc/fstab
     
@@ -328,8 +322,9 @@ config_base() {
     arch_chroot "mkinitcpio -p ${KERNEL}"
 
     install_driver_virt
-    install_driver_videos
+    [[ "$DESKTOP" != "None" ]] && install_driver_videos
 }
+
 install_boot() {
     if $UEFI ; then
         arch_chroot "grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB --recheck"
@@ -396,6 +391,7 @@ reboote(){
 ######################################################################
 
 timedatectl set-ntp true
+
 pacman -Syy && pacman -S --noconfirm dialog terminus-font reflector 
 [[ "$(uname -m)" = "x86_64" ]] && sed -i '/multilib\]/,+1 s/^#//' /etc/pacman.conf
 reflector --verbose --protocol http --protocol https --latest 20 --sort rate --save /etc/pacman.d/mirrorlist
@@ -428,7 +424,7 @@ root_password
 USER=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Criar Novo Usuário " --inputbox "\nDigite o nome do usuário. As letras DEVEM ser minúsculas.\n" 10 50 --stdout)
 user_password
 
-#
+#### Particionamento esta configurado para usar todo o hd
 automatic_particao
 
 #### Instalcao

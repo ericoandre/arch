@@ -5,9 +5,9 @@ Instalador Modo auto BIOS/UEFI, com opcao de instalar  em hd sem particao.
 ### Visual Code Studio
 ```bash
 wget "https://code.visualstudio.com/sha/download?build=stable&os=linux-x64" -O vscode.tar.gz
-sudo tar -vzxf vscode.tar.gz -C /opt/
-sudo ln -sf /opt/VSCode-linux-x64/code /usr/bin/code
-sudo echo -e '[Desktop Entry]\nVersion=1.0\nName=vscode\nExec=code\nIcon=/opt/VSCode-linux-x64/resources/app/resources/linux/code.png\nType=Application\nCategories=Development;Application' | sudo tee /usr/share/applications/vscode.desktop
+tar -vzxf vscode.tar.gz -C /opt/ && rm vscode.tar.gz 
+ln -sf /opt/VSCode-linux-x64/code /usr/bin/code
+echo -e '[Desktop Entry]\nVersion=1.0\nName=vscode\nExec=code\nIcon=/opt/VSCode-linux-x64/resources/app/resources/linux/code.png\nType=Application\nCategories=Development;Application' | sudo tee /usr/share/applications/vscode.desktop
 ```
 
 ### Sublime Text
@@ -32,8 +32,8 @@ sudo echo -e '[Desktop Entry]\nVersion=1.0\nName=Eclipse\nExec=eclipse\nTerminal
 
 ```bash
 git clone https://aur.archlinux.org/yay.git
-cd /yay && makepkg -si --noconfirm
-cd ~ && rm -rf /yay
+cd yay && makepkg -si --noconfirm
+cd ~ && rm -rf yay
 ```
 
 ### gnome-extension
@@ -99,6 +99,14 @@ makepkg -si
 
 <!-- 
 
+
+    # git clone https://github.com/Match-Yang/sddm-deepin.git ~/sddm-deepin && mv -r ~/sddm-deepin/deepin ${MOINTPOINT}/usr/share/sddm/themes/
+    # git clone https://github.com/totoro-ghost/sddm-astronaut.git ${MOINTPOINT}/usr/share/sddm/themes/astronaut/
+    # sed -i "s/^Current=.*/Current=deepin/g" ${MOINTPOINT}/usr/lib/sddm/sddm.conf.d/default.conf
+
+    # git clone https://github.com/jelenis/login-manager.git ${MOINTPOINT}/usr/share/lightdm-webkit/themes/lightdm-theme
+    # sed -i "s/^greeter-session=.*/greeter-session=lightdm-webkit2-greeter/g" ${MOINTPOINT}/etc/lightdm/lightdm.conf
+    # sed -i "s/^webkit_theme=.*/webkit_theme=lightdm-theme/g" ${MOINTPOINT}/etc/lightdm/lightdm-webkit2-greeter.conf
 
 sudo rm /var/lib/pacman/db.lck
 sudo rm /var/lib/pacman/sync/*
