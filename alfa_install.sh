@@ -15,7 +15,7 @@ VERSION="Arch Linux Installer"
 BASE_PACKAGES=('base' 'base-devel' 'grub' 'sudo' 'nano')
 
 # Pacote extras (não são obrigatórios)
-BASE_EXTRAS=('ntpd' 'ntfs-3g' 'exfat-utils' 'os-prober' 'dosfstools' 'mtools' 'acpi' 'acpid' 'zsh' 'zsh-syntax-highlighting' 'zsh-autosuggestions')
+BASE_EXTRAS=('ntfs-3g' 'exfat-utils' 'os-prober' 'dosfstools' 'mtools' 'acpi' 'acpid' 'zsh' 'zsh-syntax-highlighting' 'zsh-autosuggestions')
 BASE_EXTRAS+=('unrar' 'tar' 'alsa-plugins' 'alsa-utils' 'alsa-firmware' 'pulseaudio' 'pulseaudio-alsa' 'pavucontrol' 'volumeicon' 'cmatrix')
 BASE_EXTRAS+=('dbus' 'ufw' 'traceroute' 'networkmanager' 'net-tools' 'scrot' 'neofetch' 'iw' 'bash-completion' 'iptables')
 BASE_EXTRAS+=('archlinux-keyring' 'wget' 'make' 'gcc' 'htop' 'git' 'pciutils' 'openbsd-netcat' 'nmap' 'ntp')
@@ -273,10 +273,10 @@ update_mirrorlist() {
 }
 instalando_sistema() {
         ERR=0
-        echo "Rodando pactrap base base-devel"
-        pacstrap $MOINTPOINT "${BASE_PACKAGES[@]}" ${KERNEL} ${KERNEL}-headers ${KERNEL}-firmware "${BASE_EXTRAS[@]}" "${DESKTOP_PACKAGES[@]}"  "${FONTES_PKGS[@]}" || ERR=1
+        echo "Rodando pactrap base base-devel ${KERNEL}"
+        pacstrap $MOINTPOINT "${BASE_PACKAGES[@]}" ${KERNEL} ${KERNEL}-headers ${KERNEL}-firmware "${BASE_EXTRAS[@]}" "${FONTES_PKGS[@]}" "${DESKTOP_PACKAGES[@]}" || ERR=1
         if [[ $ERR -eq 1 ]]; then
-                echo "Erro ao instalar sistema"
+                echo "Erro ao instalar sistema ${KERNEL}"
                 exit 1
         fi
 }
@@ -323,10 +323,12 @@ config_base() {
         echo "enable networkmanager acpi"
         arch_chroot "systemctl enable NetworkManager.service acpid.service ntpd.service"  || ERR=1
 
+        echo "driver"
         install_driver_virt
         [[ "$DESKTOP" != "None" ]] && install_driver_videos
 
         # Configura ambiente ramdisk inicial
+        echo "ramdisk inicial"
         arch_chroot "mkinitcpio -p ${KERNEL}"  || ERR=1
 
         if [[ $ERR -eq 1 ]]; then
@@ -360,7 +362,7 @@ pacman -Sy --noconfirm dialog &> /dev/null
 # monta_particoes
 
 #### Instalação
-update_mirrorlist
+# update_mirrorlist
 instalando_sistema
 config_base
 install_boot_grub
