@@ -329,10 +329,10 @@ config_base() {
 
         # Configura ambiente ramdisk inicial
         echo "ramdisk inicial"
-        arch_chroot "mkinitcpio -p ${KERNEL}"  || ERR=1
+        arch_chroot "mkinitcpio -p ${KERNEL}"
 
         if [[ $ERR -eq 1 ]]; then
-                echo "Erro ao config base"
+                echo "Erro ao config base ${KERNEL}"
                 exit 1
         fi     
 }
