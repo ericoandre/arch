@@ -317,7 +317,7 @@ config_base() {
         arch_chroot "echo -e $USER_PASSWD'\n'$USER_PASSWD | passwd `echo $USER`" 
 
         # fstab
-        genfstab -U -p $MOINTPOINT >> ${MOINTPOINT}/etc/fstab || ERR=1
+        genfstab -U -p $MOINTPOINT > ${MOINTPOINT}/etc/fstab || ERR=1
 
         # networkmanager acpi
         echo "enable networkmanager acpi"
@@ -328,33 +328,25 @@ config_base() {
         [[ "$DESKTOP" != "None" ]] && install_driver_videos
 
         # Configura ambiente ramdisk inicial
-        echo "ramdisk inicial"
+        echo "Configura ambiente ramdisk inicial"
         arch_chroot "mkinitcpio -p ${KERNEL}"
 
-
-        echo "fim ${ERR}"
         if [[ $ERR -eq 1 ]]; then
-                echo "Erro ao config base ${KERNEL}"
+                echo "Erro ao config base"
                 exit 1
         fi     
 }
 install_boot_grub() {
-        ERR=0
         echo "Boot Grub"
         if $UEFI ; then
                 arch_chroot "grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB --recheck"
-                mkdir ${MOINTPOINT}/boot/efi/EFI/boot && mkdir ${MOINTPOINT}/boot/grub/locale  || ERR=1
-                cp ${MOINTPOINT}/boot/efi/EFI/grub_uefi/grubx64.efi ${MOINTPOINT}/boot/efi/EFI/boot/bootx64.efi  || ERR=1
+                mkdir ${MOINTPOINT}/boot/efi/EFI/boot && mkdir ${MOINTPOINT}/boot/grub/locale 
+                cp ${MOINTPOINT}/boot/efi/EFI/grub_uefi/grubx64.efi ${MOINTPOINT}/boot/efi/EFI/boot/bootx64.efi
         else
                 arch_chroot "grub-install --target=i386-pc --recheck $DISK"
         fi
-        cp ${MOINTPOINT}/usr/share/locale/en@quot/LC_MESSAGES/grub.mo ${MOINTPOINT}/boot/grub/locale/en.mo   || ERR=1
+        cp ${MOINTPOINT}/usr/share/locale/en@quot/LC_MESSAGES/grub.mo ${MOINTPOINT}/boot/grub/locale/en.mo
         arch_chroot "grub-mkconfig -o /boot/grub/grub.cfg"
-
-        if [[ $ERR -eq 1 ]]; then
-                echo "Erro ao instalar sistema ${KERNEL}"
-                exit 1
-        fi
 }
 
 ##################################################
