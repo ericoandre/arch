@@ -80,6 +80,8 @@ mounted=true
 
 xinit_config=''
 DESKTOP=''
+GUI=''
+DM=''
 
 if [[ $SWAPFILE -eq false ]] ; then
         ROOT_DEVICE=${HD}3
@@ -393,7 +395,6 @@ configure_instalando_sistema(){
                 fi
         fi
 }
-
 instalando_sistema() {
         ERR=0
 
@@ -455,9 +456,15 @@ config_base() {
         echo "enable networkmanager acpi"
         arch_chroot "systemctl enable NetworkManager.service acpid.service ntpd.service" 
 
-        echo "driver"
+        [[ bluetooth_enabled ]] && arch_chroot "systemctl enable bluetooth.service"
+
+
+        echo "driver e Display Manager"
         install_driver_virt
-        [[ "$DESKTOP" != "None" ]] && install_driver_videos
+        if [[ "$DESKTOP" != "None" ]]; then 
+                install_driver_videos
+                [[ $dm_enabled ]] && arch_chroot "systemctl enable ${DM}.service" || echo "$xinit_config" > ${MOINTPOINT}/home/"$USER"/.xinitrc
+        fi
 
         # Configura ambiente ramdisk inicial
         echo "Configura ambiente ramdisk inicial"
