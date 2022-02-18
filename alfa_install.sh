@@ -273,19 +273,13 @@ monta_particoes() {
                 swapon ${DISK}2 || ERR=1
                 swap_enabled=true
         else
-                if [[ -d ${MOINTPOINT}/opt/swap -a -f ${MOINTPOINT}/opt/swap/swapfile ]]; then
-                        swapon ${MOINTPOINT}/opt/swap/swapfile || ERR=1
-                        swap_enabled=true
-                else
-                        mkdir -p  ${MOINTPOINT}/opt/swap || ERR=1
-                        touch ${MOINTPOINT}/opt/swap/swapfile || ERR=1
-                        dd if=/dev/zero of=${MOINTPOINT}/opt/swap/swapfile bs=1M count=$SWAP_SIZE status=progress || ERR=1
-                        chmod 600 ${MOINTPOINT}/opt/swap/swapfile || ERR=1
-                        mkswap ${MOINTPOINT}/opt/swap/swapfile || ERR=1
-                        swapon ${MOINTPOINT}/opt/swap/swapfile || ERR=1
-                        swap_enabled=true
-                fi
-
+                mkdir -p  ${MOINTPOINT}/opt/swap || ERR=1
+                touch ${MOINTPOINT}/opt/swap/swapfile || ERR=1
+                dd if=/dev/zero of=${MOINTPOINT}/opt/swap/swapfile bs=1M count=$SWAP_SIZE status=progress || ERR=1
+                chmod 600 ${MOINTPOINT}/opt/swap/swapfile || ERR=1
+                mkswap ${MOINTPOINT}/opt/swap/swapfile || ERR=1
+                swapon ${MOINTPOINT}/opt/swap/swapfile || ERR=1
+                swap_enabled=true
         fi
 
         if [[ $ERR -eq 1 ]]; then
