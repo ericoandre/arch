@@ -28,6 +28,13 @@ sudo echo -e '[Desktop Entry]\nVersion=1.0\nName=Eclipse\nExec=eclipse\nTerminal
 ```
 
 
+### wine
+
+```bash
+sudo pacman -S --noconfirm wine wine-mono wine-gecko winetricks
+```
+
+
 ### Yay
 
 ```bash
@@ -38,7 +45,7 @@ cd ~ && rm -rf yay
 
 ### gnome-extension
 
-```
+```bash
 yay -S --noconfirm --needed  chrome-gnome-shell gnome-shell-extension-dash-to-dock 
 ```
 

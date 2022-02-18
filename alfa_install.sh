@@ -45,8 +45,8 @@ USER_PASSWD=toor
 XKBMAP=br
 
 ########## Variáveis Para Particionamento do Disco
-# ATENÇÃO, este script apaga TODO o conteúdo do disco especificado em $HD.
-HD=/dev/sda
+# ATENÇÃO, este script apaga TODO o conteúdo do disco especificado em $DISK.
+DISK=/dev/sda
 # Ponto de Montagem para o novo sistema
 MOINTPOINT=/mnt
 # Tamanho da Partição Boot: /boot
@@ -76,6 +76,7 @@ ROOT_END=$(($ROOT_START+$ROOT_SIZE))
 SWAPFILE=false
 dm_enabled=false
 bluetooth_enabled=false
+swap_enabled=false
 mounted=true
 
 xinit_config=''
@@ -84,9 +85,9 @@ GUI=''
 DM=''
 
 if [[ $SWAPFILE -eq false ]] ; then
-        ROOT_DEVICE=${HD}3
+        ROOT_PART=${DISK}3
 else
-        ROOT_DEVICE=${HD}2
+        ROOT_PART=${DISK}2
 fi
 
 # Check for UEFI
@@ -149,6 +150,16 @@ reboot_system(){
         fi
     fi
 }
+# Check and disable any active mountpoints
+check_mountpoints() {
+  if mountpoint -q ${MOINTPOINT}; then
+    umount -R $MOINTPOINT
+  fi
+
+  if free | awk '/^Swap:/ {exit !$2}'; then
+    swapoff -a
+  fi
+}
 
 ##### drivers ----------------------------
 # VM
@@ -179,20 +190,20 @@ install_driver_videos() {
                 arch_chroot "pacman -S xf86-video-amdgpu --noconfirm --needed"
         elif grep -E "Integrated Graphics Controller" <<< ${gpu_type}; then
                 arch_chroot "pacman -S libva-intel-driver libvdpau-va-gl lib32-vulkan-intel vulkan-intel libva-intel-driver libva-utils lib32-mesa --needed --noconfirm"
-        elif grep -E "Intel Corporation UHD" <<< ${gpu_type}; then
+        elif grep -E "Intel Corporation UDISK" <<< ${gpu_type}; then
                 arch_chroot "pacman -S libva-intel-driver libvdpau-va-gl lib32-vulkan-intel vulkan-intel libva-intel-driver libva-utils lib32-mesa --needed --noconfirm"
         fi
 }
 
 ##### ------------------------------------
 # Crieando um rótulo para partição do disco selecionado
-inicializa_hd() {
-        echo "Inicializando o HD"
+inicializa_DISK() {
+        echo "Inicializando o DISK"
         # Configura o tipo da tabela de partições (Ignorando erros)
         if $UEFI ; then
-                parted -s $HD mklabel gpt &> /dev/null
+                parted -s $DISK mklabel gpt &> /dev/null
         else
-                parted -s $HD mklabel msdos &> /dev/null
+                parted -s $DISK mklabel msdos &> /dev/null
         fi
 }
 particiona_discos() {
@@ -201,22 +212,22 @@ particiona_discos() {
         # Cria partição boot
         echo "Criando partição boot"
         if $UEFI ; then
-                parted -s $HD mkpart primary $EFI_FS $BOOT_START $BOOT_END 1>/dev/null || ERR=1
-                parted -s $HD set 1 esp on 1>/dev/null || ERR=1
+                parted -s $DISK mkpart primary $EFI_FS $BOOT_START $BOOT_END 1>/dev/null || ERR=1
+                parted -s $DISK set 1 esp on 1>/dev/null || ERR=1
         else
-                parted -s $HD mkpart primary $BOOT_FS $BOOT_START $BOOT_END 1>/dev/null || ERR=1
-                parted -s $HD set 1 boot on 1>/dev/null || ERR=1
+                parted -s $DISK mkpart primary $BOOT_FS $BOOT_START $BOOT_END 1>/dev/null || ERR=1
+                parted -s $DISK set 1 boot on 1>/dev/null || ERR=1
         fi
 
         if [[ $SWAPFILE -eq false ]] ; then
                 # Cria partição swap
                 echo "Criando partição swap"
-                parted -s $HD mkpart primary linux-swap $SWAP_START $SWAP_END 1>/dev/null || ERR=1
+                parted -s $DISK mkpart primary linux-swap $SWAP_START $SWAP_END 1>/dev/null || ERR=1
         fi
 
         # Cria partição root
         echo "Criando partição root"
-        parted -s -- $HD mkpart primary $ROOT_FS $ROOT_START -0 1>/dev/null || ERR=1
+        parted -s -- $DISK mkpart primary $ROOT_FS $ROOT_START -0 1>/dev/null || ERR=1
 
         if [[ $ERR -eq 1 ]]; then
                 echo "Erro durante o particionamento"
@@ -227,17 +238,17 @@ cria_fs() {
         ERR=0
         echo "Formatando partição boot"
         if $UEFI ; then
-                mkfs.vfat -F32 -n BOOT ${HD}1 1>/dev/null || ERR=1
+                mkfs.vfat -F32 -n BOOT ${DISK}1 1>/dev/null || ERR=1
         else
-                mkfs.$BOOT_FS ${HD}1 1>/dev/null || ERR=1
+                mkfs.$BOOT_FS ${DISK}1 1>/dev/null || ERR=1
         fi
         if [[ $SWAPFILE -eq false ]]; then 
                 # Cria e inicia a swap
                 echo "Formatando partição swap"
-                mkswap ${HD}2 || ERR=1
+                mkswap ${DISK}2 || ERR=1
         fi
         echo "Formatando partição root"
-        mkfs.$ROOT_FS $ROOT_DEVICE -L Root 1>/dev/null || ERR=1
+        mkfs.$ROOT_FS $ROOT_PART -L Root 1>/dev/null || ERR=1
 
         if [[ $ERR -eq 1 ]]; then
                 echo "Erro ao criar File Systems"
@@ -248,17 +259,34 @@ monta_particoes() {
         ERR=0
         echo "Montando partições"
         # Monta partição root
-        mount $ROOT_DEVICE /mnt || ERR=1
+        mount $ROOT_PART ${MOINTPOINT} || ERR=1
         if $UEFI ; then
                 # Monta partição efi
                 mkdir -p ${MOINTPOINT}/boot/efi || ERR=1
-                mount ${HD}1 ${MOINTPOINT}/boot/efi || ERR=1
+                mount ${DISK}1 ${MOINTPOINT}/boot/efi || ERR=1
         else
                 # Monta partição boot
                 mkdir ${MOINTPOINT}/boot || ERR=1
-                mount ${HD}1 ${MOINTPOINT}/boot || ERR=1
+                mount ${DISK}1 ${MOINTPOINT}/boot || ERR=1
         fi
-        [[ $SWAPFILE -eq false ]] && swapon ${HD}2 || ERR=1
+        if [[ $SWAPFILE -eq false ]]; then 
+                swapon ${DISK}2 || ERR=1
+                swap_enabled=true
+        else
+                if [[ -d ${MOINTPOINT}/opt/swap -a -f ${MOINTPOINT}/opt/swap/swapfile ]]; then
+                        swapon ${MOINTPOINT}/opt/swap/swapfile || ERR=1
+                        swap_enabled=true
+                else
+                        mkdir -p  ${MOINTPOINT}/opt/swap || ERR=1
+                        touch ${MOINTPOINT}/opt/swap/swapfile || ERR=1
+                        dd if=/dev/zero of=${MOINTPOINT}/opt/swap/swapfile bs=1M count=$SWAP_SIZE status=progress || ERR=1
+                        chmod 600 ${MOINTPOINT}/opt/swap/swapfile || ERR=1
+                        mkswap ${MOINTPOINT}/opt/swap/swapfile || ERR=1
+                        swapon ${MOINTPOINT}/opt/swap/swapfile || ERR=1
+                        swap_enabled=true
+                fi
+
+        fi
 
         if [[ $ERR -eq 1 ]]; then
                 echo "Erro ao Montar as partição"
@@ -267,19 +295,11 @@ monta_particoes() {
 }
 ##### ------------------------------------
 update_mirrorlist() {
-        ERR=0
         pacman -Sy --noconfirm reflector &> /dev/null
         reflector --verbose --protocol http --protocol https --latest 20 --sort rate --save /etc/pacman.d/mirrorlist
         [[ "$(uname -m)" = "x86_64" ]] && sed -i '/multilib\]/,+1 s/^#//' /etc/pacman.conf && pacman -Sy
 }
 configure_instalando_sistema(){
-        [[ $UEFI ]] && BASE_EXTRAS+=('efibootmgr')
-
-        if [ "$(grep -m1 vendor_id /proc/cpuinfo | awk '{print $3}')" = "GenuineIntel" ]; then
-                BASE_EXTRAS+=('intel-ucode')
-        elif [ "$proc" = "AuthenticAMD" ]; then
-                BASE_EXTRAS+=('amd-ucode')
-        fi
         while true; do
                 DESKTOP=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "Choose your Graphical Environment" --no-cancel --menu "Select the style of graphical environment you wish to \
                         use.\n\nGraphical environment:" 12 75 3 \
@@ -406,10 +426,13 @@ instalando_sistema() {
                 BASE_EXTRAS+=('amd-ucode')
         fi
 
-        echo "Rodando pactrap base base-devel ${KERNEL}"
+        echo "Rodando pactrap ${MOINTPOINT} base base-devel ${KERNEL}"
         pacstrap $MOINTPOINT "${BASE_PACKAGES[@]}" ${KERNEL} ${KERNEL}-headers ${KERNEL}-firmware "${BASE_EXTRAS[@]}" "${FONTES_PKGS[@]}" "${DESKTOP_PACKAGES[@]}" || ERR=1
+        [[ $? -eq 0 ]] && installed=true || ERR=1
+
         if [[ $ERR -eq 1 ]]; then
                 echo "Erro ao instalar sistema ${KERNEL}"
+                check_mountpoints
                 exit 1
         fi
 }
@@ -448,6 +471,7 @@ config_base() {
         # criar usuario Definir senha do usuário
         arch_chroot "useradd -m -g users -G adm,lp,wheel,power,audio,video -s /bin/bash ${USER}" 
         arch_chroot "echo -e $USER_PASSWD'\n'$USER_PASSWD | passwd `echo $USER`" 
+        sed -i 's/# %wheel ALL=(ALL) ALL$/%wheel ALL=(ALL) ALL/' ${MOINTPOINT}/etc/sudoers
 
         # fstab
         genfstab -U -p $MOINTPOINT > ${MOINTPOINT}/etc/fstab || ERR=1
@@ -455,6 +479,12 @@ config_base() {
         # networkmanager acpi
         echo "enable networkmanager acpi"
         arch_chroot "systemctl enable NetworkManager.service acpid.service ntpd.service" 
+
+        # update_mirrorlist
+        [[ "$(uname -m)" = "x86_64" ]] && sed -i "/\[multilib\]/,/Include/"'s/^#//' ${MOINTPOINT}/etc/pacman.conf
+        cp /etc/pacman.d/mirrorlist ${MOINTPOINT}/etc/pacman.d/mirrorlist
+        arch_chroot "pacman -Sy" 
+
 
         [[ bluetooth_enabled ]] && arch_chroot "systemctl enable bluetooth.service"
 
@@ -472,6 +502,7 @@ config_base() {
 
         if [[ $ERR -eq 1 ]]; then
                 echo "Erro ao config base"
+                check_mountpoints
                 exit 1
         fi     
 }
@@ -482,7 +513,7 @@ install_boot_grub() {
                 [[ -d ${MOINTPOINT}/boot/efi/EFI/boot ]] &&  echo "Directory EFI/boot found." || mkdir ${MOINTPOINT}/boot/efi/EFI/boot 
                 cp ${MOINTPOINT}/boot/efi/EFI/GRUB/grubx64.efi ${MOINTPOINT}/boot/efi/EFI/boot/bootx64.efi
         else
-                arch_chroot "grub-install --target=i386-pc --recheck $HD"
+                arch_chroot "grub-install --target=i386-pc --recheck $DISK"
         fi
         [[ -d ${MOINTPOINT}/boot/grub/locale ]] &&  echo "Directory grub/locale found." || mkdir ${MOINTPOINT}/boot/grub/locale
         cp ${MOINTPOINT}/usr/share/locale/en@quot/LC_MESSAGES/grub.mo ${MOINTPOINT}/boot/grub/locale/en.mo
@@ -496,14 +527,14 @@ install_boot_grub() {
 pacman -Sy --noconfirm dialog &> /dev/null
 
 #### Particionamento
-inicializa_hd
+inicializa_DISK
 particiona_discos
 cria_fs
 monta_particoes
 
 #### Instalação
 update_mirrorlist
-# configure_instalando_sistema
+configure_instalando_sistema
 instalando_sistema
 config_base
 install_boot_grub
