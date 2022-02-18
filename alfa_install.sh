@@ -292,6 +292,7 @@ update_mirrorlist() {
         pacman -Sy --noconfirm reflector &> /dev/null
         reflector --verbose --protocol http --protocol https --latest 20 --sort rate --save /etc/pacman.d/mirrorlist
         [[ "$(uname -m)" = "x86_64" ]] && sed -i '/multilib\]/,+1 s/^#//' /etc/pacman.conf && pacman -Sy
+        pacman -Sy && pacman-key --init && pacman-key --populate archlinux
 }
 configure_instalando_sistema(){
         while true; do
@@ -477,8 +478,7 @@ config_base() {
         # update_mirrorlist
         [[ "$(uname -m)" = "x86_64" ]] && sed -i "/\[multilib\]/,/Include/"'s/^#//' ${MOINTPOINT}/etc/pacman.conf
         cp /etc/pacman.d/mirrorlist ${MOINTPOINT}/etc/pacman.d/mirrorlist
-        arch_chroot "pacman -Sy" 
-
+        arch_chroot "pacman -Sy && pacman-key --init && pacman-key --populate archlinux" 
 
         [[ bluetooth_enabled ]] && arch_chroot "systemctl enable bluetooth.service"
 
@@ -519,6 +519,10 @@ install_boot_grub() {
 ##################################################
 
 pacman -Sy --noconfirm dialog &> /dev/null
+
+timedatectl set-ntp true
+[[ $FONT != "" ]] && setfont $FONT
+loadkeys $KEYMAP  # br-abnt2
 
 #### Particionamento
 inicializa_DISK
