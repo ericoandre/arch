@@ -290,7 +290,7 @@ monta_particoes() {
 ##### ------------------------------------
 update_mirrorlist() {
         pacman -Sy --noconfirm reflector &> /dev/null
-        reflector --verbose --protocol http --protocol https --latest 10 --sort rate --save /etc/pacman.d/mirrorlist
+        reflector --protocol http --protocol https --latest 10 --sort rate --save /etc/pacman.d/mirrorlist
         [[ "$(uname -m)" = "x86_64" ]] && sed -i '/multilib\]/,+1 s/^#//' /etc/pacman.conf && pacman -Syy
         pacman-key --init && pacman-key --populate archlinux && pacman-key --refresh-keys && pacman -Syy
 }
@@ -466,7 +466,7 @@ config_base() {
         # criar usuario Definir senha do usuário
         arch_chroot "useradd -m -g users -G adm,lp,wheel,power,audio,video -s /bin/bash ${USER}" 
         arch_chroot "echo -e $USER_PASSWD'\n'$USER_PASSWD | passwd `echo $USER`" 
-        sed -i 's/# %wheel ALL=(ALL) ALL$/%wheel ALL=(ALL) ALL/' ${MOINTPOINT}/etc/sudoers
+        arch_chroot "sed -i 's/# %wheel ALL=(ALL) ALL$/%wheel ALL=(ALL) ALL/' /etc/sudoers"
 
         # fstab
         genfstab -U -p $MOINTPOINT > ${MOINTPOINT}/etc/fstab || ERR=1
