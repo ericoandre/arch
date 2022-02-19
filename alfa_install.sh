@@ -290,7 +290,7 @@ monta_particoes() {
 ##### ------------------------------------
 update_mirrorlist() {
         pacman -Sy --noconfirm reflector &> /dev/null
-        reflector --verbose --protocol http --protocol https --latest 20 --sort rate --save /etc/pacman.d/mirrorlist
+        reflector --verbose --protocol http --protocol https --latest 10 --sort rate --save /etc/pacman.d/mirrorlist
         [[ "$(uname -m)" = "x86_64" ]] && sed -i '/multilib\]/,+1 s/^#//' /etc/pacman.conf && pacman -Syy
         pacman-key --init && pacman-key --populate archlinux && pacman-key --refresh-keys && pacman -Syy
 }
