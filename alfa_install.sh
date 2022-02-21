@@ -30,7 +30,7 @@ DESKTOP_DEFAULTS+=('archlinux-wallpaper' 'xdg-user-dirs-gtk' 'audacious')
 
 DESKTOP_PACKAGES=()
 
-#
+# Servicos a seren iniciados com o sistema
 SERVICECTL=('NetworkManager.service' 'acpid.service' 'ntpd.service')
 
 # Config Suport
@@ -113,8 +113,8 @@ arch_chroot() {
     arch-chroot $MOINTPOINT /bin/bash -c "${1}" &> /dev/null
 }
 root_password() {
-    rtpasswd=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Definir Senha ROOT " --inputbox "\nDigite a senha Root \n\n" 10 50 --stdout)
-    rtpasswd2=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Definir Senha ROOT " --inputbox "\nDigite novamente a senha Root \n\n" 10 50 --stdout)
+    rtpasswd=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Definir Senha ROOT " --inputbox "\nDigite a senha Root" 10 50 --stdout)
+    rtpasswd2=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Definir Senha ROOT " --inputbox "\nDigite novamente a senha Root" 10 50 --stdout)
     if [ "$rtpasswd" != "$rtpasswd2" ]; then 
         dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Definir Senha ROOT " --msgbox "As senhas não coincidem. Tente novamente." 10 50
         root_password
@@ -136,7 +136,7 @@ reboot_system(){
     if $installed; then
         while true; do
             choice=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "Reboot System" --nocancel --menu "Arch Linux has finished installing.\nYou must restart your \
-                system to boot Arch.\n\nPlease select one of the following options:" 13 60 3 \
+                system to boot Arch.\nPlease select one of the following options:" 13 60 3 \
                 "Reboot" "Reboot system" \
                 "Poweroff" "Poweroff system" \
                 "Exit" "Unmount system and exit to CLI" --stdout)
@@ -150,11 +150,45 @@ reboot_system(){
             esac
         done
     else
-        dialog --title "Reboot System" --yesno "The installation is incomplete.\n\nAre you sure you want to reboot your system?" 7 60
+        dialog --title "Reboot System" --yesno "The installation is incomplete.\nAre you sure you want to reboot your system?" 7 60
         if [ $? -eq 0 ]; then
             reset ; reboot ; exit
         fi
     fi
+}
+instala_base() {
+        ERR=0
+
+        [[ $UEFI ]] && BASE_EXTRAS+=('efibootmgr')
+
+        if [ "$(grep -m1 vendor_id /proc/cpuinfo | awk '{print $3}')" = "GenuineIntel" ]; then
+                BASE_EXTRAS+=('intel-ucode')
+        elif [ "$proc" = "AuthenticAMD" ]; then
+                BASE_EXTRAS+=('amd-ucode')
+        fi
+
+        echo "Rodando pactrap ${MOINTPOINT} base base-devel ${KERNEL}"
+        pacstrap $MOINTPOINT "${BASE_PACKAGES[@]}" ${KERNEL} ${KERNEL}-headers ${KERNEL}-firmware "${BASE_EXTRAS[@]}" "${FONTES_PKGS[@]}" "${DESKTOP_PACKAGES[@]}" || ERR=1
+        [[ $? -eq 0 ]] && installed=true || ERR=1
+
+        if [[ $ERR -eq 1 ]]; then
+                echo "Erro ao instalar sistema ${KERNEL}"
+                # check_mountpoints
+                exit 1
+        fi
+}
+install_boot_grub() {
+        echo "Boot Grub"
+        if $UEFI ; then
+                arch_chroot "grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB --recheck"
+                [[ -d ${MOINTPOINT}/boot/efi/EFI/boot ]] &&  echo "Directory EFI/boot found." || mkdir ${MOINTPOINT}/boot/efi/EFI/boot 
+                cp ${MOINTPOINT}/boot/efi/EFI/GRUB/grubx64.efi ${MOINTPOINT}/boot/efi/EFI/boot/bootx64.efi
+        else
+                arch_chroot "grub-install --target=i386-pc --recheck $DISK"
+        fi
+        [[ -d ${MOINTPOINT}/boot/grub/locale ]] &&  echo "Directory grub/locale found." || mkdir ${MOINTPOINT}/boot/grub/locale
+        cp ${MOINTPOINT}/usr/share/locale/en@quot/LC_MESSAGES/grub.mo ${MOINTPOINT}/boot/grub/locale/en.mo
+        arch_chroot "grub-mkconfig -o /boot/grub/grub.cfg"
 }
 # Check and disable any active mountpoints
 check_mountpoints() {
@@ -166,7 +200,6 @@ check_mountpoints() {
     swapoff -a
   fi
 }
-
 ##### drivers ----------------------------
 # VM
 install_driver_virt() {
@@ -311,7 +344,7 @@ update_mirrorlist() {
 configure_instalando_sistema(){
         while true; do
                 DESKTOP=$(dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "Choose your Graphical Environment" --no-cancel --menu "Select the style of graphical environment you wish to \
-                        use.\n\nGraphical environment:" 12 75 3 \
+                        use.\nGraphical environment:" 12 75 3 \
                         "Desktop Environment" "Traditional complete graphical user interface" \
                         "Window Manager" "Standalone minimal graphical user interface" \
                         "None" "Command-line only interface" --stdout)
@@ -365,7 +398,7 @@ configure_instalando_sistema(){
                         xinit_config="exec awesome"
                         ;;
                         "bspwm") 
-                        DESKTOP_PACKAGES+=('bspwm' 'sxhkd') 
+                        DESKTOP_PACKAGES+=('bspwm' 'sxhkd' 'lua' 'dmenu' 'nitrogen' 'feh' 'picom') 
                         xinit_config="sxhkd & ; exec bspwm"
                         ;; # 
                         "Fluxbox") 
@@ -397,7 +430,7 @@ configure_instalando_sistema(){
                 # Check for available bluetooth devices
                 if $bluetooth; then
                         DESKTOP_PACKAGES+=('bluez' 'bluez-utils' 'pulseaudio-bluetooth')
-                        dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "Install Bluetooth Manager" --yesno "Would you like to install a graphical Bluetooth manager?\n\nThe utility that best integrates with the desktop environment you selected will be installed." 8 60
+                        dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "Install Bluetooth Manager" --yesno "Would you like to install a graphical Bluetooth manager?\nThe utility that best integrates with the desktop environment you selected will be installed." 8 60
                         if [ $? -eq 0 ]; then
                                 case "$GUI" in
                                         "Budgie"|"GNOME") DESKTOP_PACKAGES+=('gnome-bluetooth') ;;
@@ -409,7 +442,7 @@ configure_instalando_sistema(){
                         SERVICECTL+=('bluetooth.service')
                 fi
 
-                dialog --title "Install a Display Manager" --yesno "Would you like to install a graphical login manager?\n\nIf you select no, 'xinit' will be installed so you can manually start Xorg with the'startx' command." 8 60
+                dialog --title "Install a Display Manager" --yesno "Would you like to install a graphical login manager?\nIf you select no, 'xinit' will be installed so you can manually start Xorg with the'startx' command." 8 60
                 if [ $? -eq 0 ]; then
                         DM=$(dialog  --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)"  --title "Install a Display Manager" --menu "Select a display manager to install:" 10 50 3 "gdm" "GNOME Display Manager" "lxdm" "" "lightdm" "Lightweight Display Manager" "sddm" "Simple Desktop Display Manager" --stdout)
                         if [ $? -eq 0 ]; then
@@ -434,27 +467,6 @@ configure_instalando_sistema(){
                                 esac
                         fi
                 fi
-        fi
-}
-instalando_sistema() {
-        ERR=0
-
-        [[ $UEFI ]] && BASE_EXTRAS+=('efibootmgr')
-
-        if [ "$(grep -m1 vendor_id /proc/cpuinfo | awk '{print $3}')" = "GenuineIntel" ]; then
-                BASE_EXTRAS+=('intel-ucode')
-        elif [ "$proc" = "AuthenticAMD" ]; then
-                BASE_EXTRAS+=('amd-ucode')
-        fi
-
-        echo "Rodando pactrap ${MOINTPOINT} base base-devel ${KERNEL}"
-        pacstrap $MOINTPOINT "${BASE_PACKAGES[@]}" ${KERNEL} ${KERNEL}-headers ${KERNEL}-firmware "${BASE_EXTRAS[@]}" "${FONTES_PKGS[@]}" "${DESKTOP_PACKAGES[@]}" || ERR=1
-        [[ $? -eq 0 ]] && installed=true || ERR=1
-
-        if [[ $ERR -eq 1 ]]; then
-                echo "Erro ao instalar sistema ${KERNEL}"
-                # check_mountpoints
-                exit 1
         fi
 }
 config_base() {
@@ -491,8 +503,8 @@ config_base() {
 
         # criar usuario Definir senha do usuário
         arch_chroot "useradd -m -g users -G adm,lp,wheel,power,audio,video -s /bin/bash ${USER}" 
-        arch_chroot "echo -e $USER_PASSWD'\n'$USER_PASSWD | passwd `echo $USER`" 
-        arch_chroot "sed -i 's/# %wheel ALL=(ALL) ALL$/%wheel ALL=(ALL) ALL/' /etc/sudoers"
+        arch_chroot "echo -e $USER_PASSWD'\n'$USER_PASSWD | passwd `echo $USER`"
+        sed -i 's/# %wheel ALL=(ALL) ALL$/%wheel ALL=(ALL) ALL/' ${MOINTPOINT}/etc/sudoers
 
         # fstab
         genfstab -U -p $MOINTPOINT > ${MOINTPOINT}/etc/fstab || ERR=1
@@ -519,20 +531,6 @@ config_base() {
                 exit 1
         fi     
 }
-install_boot_grub() {
-        echo "Boot Grub"
-        if $UEFI ; then
-                arch_chroot "grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB --recheck"
-                [[ -d ${MOINTPOINT}/boot/efi/EFI/boot ]] &&  echo "Directory EFI/boot found." || mkdir ${MOINTPOINT}/boot/efi/EFI/boot 
-                cp ${MOINTPOINT}/boot/efi/EFI/GRUB/grubx64.efi ${MOINTPOINT}/boot/efi/EFI/boot/bootx64.efi
-        else
-                arch_chroot "grub-install --target=i386-pc --recheck $DISK"
-        fi
-        [[ -d ${MOINTPOINT}/boot/grub/locale ]] &&  echo "Directory grub/locale found." || mkdir ${MOINTPOINT}/boot/grub/locale
-        cp ${MOINTPOINT}/usr/share/locale/en@quot/LC_MESSAGES/grub.mo ${MOINTPOINT}/boot/grub/locale/en.mo
-        arch_chroot "grub-mkconfig -o /boot/grub/grub.cfg"
-}
-
 ##################################################
 #                   Script                       #
 ##################################################
@@ -554,7 +552,7 @@ update_mirrorlist
 configure_instalando_sistema
 install_driver_virt
 install_driver_videos
-instalando_sistema
+instala_base
 config_base
 install_boot_grub
 
