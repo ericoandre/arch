@@ -30,6 +30,9 @@ DESKTOP_DEFAULTS+=('archlinux-wallpaper' 'xdg-user-dirs-gtk' 'audacious')
 
 DESKTOP_PACKAGES=()
 
+#
+SERVICECTL=('NetworkManager.service' 'acpid.service' 'ntpd.service')
+
 # Config Suport
 KERNEL=linux
 HNAME=ArchVM
@@ -74,15 +77,14 @@ ROOT_END=$(($ROOT_START+$ROOT_SIZE))
 
 ########
 SWAPFILE=false
-dm_enabled=false
-bluetooth_enabled=false
+dm_disable=true
 swap_enabled=false
 mounted=true
+NVIDIA_GeForce=false
 
 xinit_config=''
 DESKTOP=''
 GUI=''
-DM=''
 
 if [[ $SWAPFILE -eq false ]] ; then
         ROOT_PART=${DISK}3
@@ -92,6 +94,10 @@ fi
 
 # Check for UEFI
 [[ -d /sys/firmware/efi ]] && UEFI=true
+
+# 
+gpu_type=$(lspci)
+
 
 # Check for bluetooth support
 if dmesg | grep -iq "blue"; then
@@ -167,34 +173,42 @@ install_driver_virt() {
         case $(systemd-detect-virt) in
               kvm)
                   # xf86-video-qxl is disabled due to bugs on certain DEs
-                  arch_chroot "pacman -S spice-vdagent --noconfirm --needed"
+                  # arch_chroot "pacman -S spice-vdagent --noconfirm --needed"
+                  BASE_EXTRAS+=('spice-vdagent')
               ;;
               vmware)
-                  arch_chroot "pacman -S open-vm-tools --noconfirm --needed"
-                  arch_chroot "systemctl enable vmtoolsd.service"
-                  arch_chroot "systemctl enable vmware-vmblock-fuse.service"
+                  BASE_EXTRAS+=('open-vm-tools')
+                  SERVICECTL+=('vmtoolsd.service' 'vmware-vmblock-fuse.service')
+                  # arch_chroot "pacman -S open-vm-tools --noconfirm --needed"
+                  # arch_chroot "systemctl enable vmtoolsd.service"
+                  # arch_chroot "systemctl enable vmware-vmblock-fuse.service"
               ;;
               oracle)
-                  arch_chroot "pacman -S virtualbox-guest-utils xf86-video-vmware --noconfirm --needed"
-                  arch_chroot "systemctl enable vboxservice.service"
+                  BASE_EXTRAS+=('virtualbox-guest-utils xf86-video-vmware')
+                  SERVICECTL+=('vboxservice.service')
+                  # arch_chroot "pacman -S virtualbox-guest-utils xf86-video-vmware --noconfirm --needed"
+                  # arch_chroot "systemctl enable vboxservice.service"
               ;;
         esac
 } 
 # Videos
 install_driver_videos() {
-        gpu_type=$(lspci)
         if grep -E "NVIDIA|GeForce" <<< ${gpu_type}; then
-                arch_chroot "pacman -S nvidia --noconfirm --needed"
-                arch_chroot "nvidia-xconfig"
+                # arch_chroot "pacman -S nvidia --noconfirm --needed"
+                # arch_chroot "nvidia-xconfig"
+                DESKTOP_PACKAGES+=('nvidia')
+                NVIDIA_GeForce=true
         elif lspci | grep 'VGA' | grep -E "Radeon|AMD"; then
-                arch_chroot "pacman -S xf86-video-amdgpu --noconfirm --needed"
+                DESKTOP_PACKAGES+=('xf86-video-amdgpu')
+                # arch_chroot "pacman -S xf86-video-amdgpu --noconfirm --needed"
         elif grep -E "Integrated Graphics Controller" <<< ${gpu_type}; then
-                arch_chroot "pacman -S libva-intel-driver libvdpau-va-gl lib32-vulkan-intel vulkan-intel libva-intel-driver libva-utils lib32-mesa --needed --noconfirm"
+                DESKTOP_PACKAGES+=('libva-intel-driver' 'libvdpau-va-gl' 'lib32-vulkan-intel' 'vulkan-intel' 'libva-intel-driver' 'libva-utils' 'lib32-mesa')
+                # arch_chroot "pacman -S libva-intel-driver libvdpau-va-gl lib32-vulkan-intel vulkan-intel libva-intel-driver libva-utils lib32-mesa --needed --noconfirm"
         elif grep -E "Intel Corporation UDISK" <<< ${gpu_type}; then
-                arch_chroot "pacman -S libva-intel-driver libvdpau-va-gl lib32-vulkan-intel vulkan-intel libva-intel-driver libva-utils lib32-mesa --needed --noconfirm"
+                DESKTOP_PACKAGES+=('libva-intel-driver' 'libvdpau-va-gl' 'lib32-vulkan-intel' 'vulkan-intel' 'libva-intel-driver' 'libva-utils' 'lib32-mesa')
+                # arch_chroot "pacman -S libva-intel-driver libvdpau-va-gl lib32-vulkan-intel vulkan-intel libva-intel-driver libva-utils lib32-mesa --needed --noconfirm"
         fi
 }
-
 ##### ------------------------------------
 # Crieando um rótulo para partição do disco selecionado
 inicializa_DISK() {
@@ -382,7 +396,6 @@ configure_instalando_sistema(){
 
                 # Check for available bluetooth devices
                 if $bluetooth; then
-                        bluetooth_enabled=true
                         DESKTOP_PACKAGES+=('bluez' 'bluez-utils' 'pulseaudio-bluetooth')
                         dialog --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "Install Bluetooth Manager" --yesno "Would you like to install a graphical Bluetooth manager?\n\nThe utility that best integrates with the desktop environment you selected will be installed." 8 60
                         if [ $? -eq 0 ]; then
@@ -393,18 +406,31 @@ configure_instalando_sistema(){
                                         *) DESKTOP_PACKAGES+=('blueman') ;;
                                 esac
                         fi
+                        SERVICECTL+=('bluetooth.service')
                 fi
 
                 dialog --title "Install a Display Manager" --yesno "Would you like to install a graphical login manager?\n\nIf you select no, 'xinit' will be installed so you can manually start Xorg with the'startx' command." 8 60
                 if [ $? -eq 0 ]; then
                         DM=$(dialog  --clear --backtitle "$VERSION - $SYSTEM ($ARCHI)"  --title "Install a Display Manager" --menu "Select a display manager to install:" 10 50 3 "gdm" "GNOME Display Manager" "lxdm" "" "lightdm" "Lightweight Display Manager" "sddm" "Simple Desktop Display Manager" --stdout)
                         if [ $? -eq 0 ]; then
-                                dm_enabled=true
+                                dm_disable=false
                                 case "$DM" in
-                                        "gdm") DESKTOP_PACKAGES+=('gdm') ;;
-                                        "lxdm ") DESKTOP_PACKAGES+=('lxdm') ;;
-                                        "lightdm") DESKTOP_PACKAGES+=('lightdm' 'lightdm-gtk-greeter' 'lightdm-gtk-greeter-settings') ;;
-                                        "sddm") DESKTOP_PACKAGES+=('sddm') ;;
+                                        "gdm") 
+                                        DESKTOP_PACKAGES+=('gdm') 
+                                        SERVICECTL+=('gdm.service')
+                                        ;;
+                                        "lxdm ") 
+                                        DESKTOP_PACKAGES+=('lxdm') 
+                                        SERVICECTL+=('lxdm.service')
+                                        ;;
+                                        "lightdm") 
+                                        DESKTOP_PACKAGES+=('lightdm' 'lightdm-gtk-greeter' 'lightdm-gtk-greeter-settings') 
+                                        SERVICECTL+=('lightdm.service')
+                                        ;;
+                                        "sddm") 
+                                        DESKTOP_PACKAGES+=('sddm') 
+                                        SERVICECTL+=('sddm.service')
+                                        ;;
                                 esac
                         fi
                 fi
@@ -472,23 +498,16 @@ config_base() {
         genfstab -U -p $MOINTPOINT > ${MOINTPOINT}/etc/fstab || ERR=1
 
         # networkmanager acpi
-        echo "enable networkmanager acpi"
-        arch_chroot "systemctl enable NetworkManager.service acpid.service ntpd.service" 
+        echo "enable ${SERVICECTL[@]}"
+        arch_chroot "systemctl enable ${SERVICECTL[@]}" 
 
         # update_mirrorlist
         [[ "$(uname -m)" = "x86_64" ]] && sed -i "/\[multilib\]/,/Include/"'s/^#//' ${MOINTPOINT}/etc/pacman.conf
         cp /etc/pacman.d/mirrorlist ${MOINTPOINT}/etc/pacman.d/mirrorlist
         arch_chroot "pacman -Sy" 
 
-        [[ bluetooth_enabled ]] && arch_chroot "systemctl enable bluetooth.service"
-
-
-        echo "driver e Display Manager"
-        install_driver_virt
-        if [[ "$DESKTOP" != "None" ]]; then 
-                install_driver_videos
-                [[ $dm_enabled ]] && arch_chroot "systemctl enable ${DM}.service" || echo "$xinit_config" > ${MOINTPOINT}/home/"$USER"/.xinitrc
-        fi
+        [[ $NVIDIA_GeForce ]] && arch_chroot "nvidia-xconfig"
+        [[ $dm_disable ]] && echo "$xinit_config" > ${MOINTPOINT}/home/"$USER"/.xinitrc
 
         # Configura ambiente ramdisk inicial
         echo "Configura ambiente ramdisk inicial"
@@ -533,6 +552,8 @@ monta_particoes
 #### Instalação
 update_mirrorlist
 configure_instalando_sistema
+install_driver_virt
+install_driver_videos
 instalando_sistema
 config_base
 install_boot_grub
