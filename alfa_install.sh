@@ -17,7 +17,7 @@ BASE_PACKAGES=('base' 'base-devel' 'grub' 'sudo' 'nano')
 # Pacote extras (não são obrigatórios)
 BASE_EXTRAS=('ntfs-3g' 'exfat-utils' 'os-prober' 'dosfstools' 'mtools' 'acpi' 'acpid' 'zsh' 'zsh-syntax-highlighting' 'zsh-autosuggestions')
 BASE_EXTRAS+=('unrar' 'tar' 'alsa-plugins' 'alsa-utils' 'alsa-firmware' 'pulseaudio' 'pulseaudio-alsa' 'pavucontrol' 'volumeicon' 'cmatrix')
-BASE_EXTRAS+=('dbus' 'ufw' 'traceroute' 'networkmanager' 'net-tools' 'scrot' 'neofetch' 'iw' 'bash-completion' 'iptables')
+BASE_EXTRAS+=('go' 'dbus' 'ufw' 'traceroute' 'networkmanager' 'net-tools' 'scrot' 'neofetch' 'iw' 'bash-completion' 'iptables')
 BASE_EXTRAS+=('archlinux-keyring' 'wget' 'make' 'gcc' 'htop' 'git' 'pciutils' 'openbsd-netcat' 'nmap' 'ntp')
 
 FONTES_PKGS=('ttf-droid' 'noto-fonts' 'ttf-liberation' 'ttf-freefont' 'ttf-dejavu' 'ttf-hack' 'ttf-roboto' 'freetype2' 'terminus-font' 'ttf-bitstream-vera' 'ttf-dejavu' 'ttf-droid' 'ttf-fira-mono' 'ttf-fira-sans' 'ttf-freefont' 'ttf-inconsolata' 'ttf-liberation' 'ttf-linux-libertine' 'ttf-ubuntu-font-family' 'ttf-font-awesome' 'otf-font-awesome')
